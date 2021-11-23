@@ -1,0 +1,285 @@
+---
+title: 'Lab 06: Intro to Inference, Confidence Intervals, Resampling, and Significance'
+author: "Mandy Klehr --- I worked with Matt, Jahiya, John, and Bonnie"
+date: "10/24/2021"
+output:
+  html_document:
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+---
+
+
+
+```{r,echo=FALSE, message=FALSE, results=FALSE, warning = FALSE, fig.show = 'hide'}
+
+#R function to calculate standard error of the mean
+
+sse_mean = function(x)
+{
+  sse = sd(x, na.rm = TRUE) / sqrt(length(!is.na(x)))
+  return(sse)
+}        
+
+require(palmerpenguins)
+sse_mean(penguins$bill_depth_mm)
+
+#not same result 0.1067846, play with later to tweak it further. 
+
+boxplot(flipper_length_mm ~ species, data = penguins)
+
+dat_pen = droplevels(subset(penguins, species != "Gentoo"))
+par(mfrow = c(1,2))
+boxplot(flipper_length_mm ~ species, data = penguins)
+boxplot(flipper_length_mm ~ species, data = dat_pen)
+
+# for reproducibility
+
+set.seed(123)
+
+flipper_shuffled = sample(penguins$flipper_length_mm, replace = TRUE)
+par(mfrow = c(1, 2))
+boxplot(flipper_length_mm ~ species, data = penguins)
+boxplot(flipper_shuffled ~ penguins$species, xlab = "species")
+
+#great way to simulate a null distribution Monte Carlo resampling (the above for replacing)
+
+#bootstrap resampling - samples entire rows of data, shuffles rows with replacement but does not shuffle the values in columns.
+
+t.test(dat_pen$flipper_length_mm ~ dat_pen$species)
+
+#reset the random number generator state for reproducibility
+set.seed(1)
+flipper_shuffled = sample(dat_pen$flipper_length_mm)
+
+boxplot(flipper_shuffled ~ dat_pen$species)
+
+t_test_1 = t.test(flipper_shuffled ~ dat_pen$species)
+t_test_1
+
+t_test = t.test(dat_pen$flipper_length_mm ~ dat_pen$species)
+t_test
+
+t_test$estimate
+
+diff_observed = round(diff(t_test$estimate), digits = 3)
+print(diff_observed, digits = 3)
+
+agg_means = aggregate(
+  flipper_length_mm ~ species,
+  data = dat_pen, 
+  FUN = mean, 
+  na.rm = TRUE)
+diff_observed = diff(agg_means[, 2])
+
+agg_means
+diff_observed
+
+table(dat_pen$species)
+
+n_1 = 68
+n_2 = 152
+
+dat_1 = sample(dat_pen$flipper_length_mm, n_1, replace = TRUE)
+dat_2 = sample(dat_pen$flipper_length_mm, n_2, replace = TRUE)
+
+diff_simulated = 
+  mean(dat_1, na.rm = TRUE) - mean(dat_2, na.rm = TRUE)
+
+print(c(observed = diff_observed, simulated = diff_simulated))
+
+two_group_resample = function(x, n_1, n_2)
+{
+  dat_1 = sample(x, n_1, replace = TRUE)
+  dat_2 = sample(x, n_2, replace = TRUE)
+
+  diff_simulated = 
+    mean(dat_1, na.rm = TRUE) - mean(dat_2, na.rm = TRUE)
+}
+
+set.seed(54321)
+print(two_group_resample(dat_pen$flipper_length_mm, 68, 152))
+
+n = 2000
+mean_differences = c()
+for (i in 1:n)
+{
+  mean_differences = c(
+    mean_differences, 
+    two_group_resample(dat_pen$flipper_length_mm, 68, 152)
+  )
+}
+hist(mean_differences)
+  
+sum(abs(mean_differences) >= diff_observed)
+
+t_test = t.test(flipper_shuffled ~ dat_pen$species)
+
+str(t_test)
+
+t_test$estimate
+```
+# Q1
+
+I found this one difficult, only because I tried to use the *!is.na()* in the function with the length of x for the sample size, but I kept getting a value that was not the same 43.36473 for body mass of the penguins data. Instead it was 43.23849 which seems to indicate that it is not excluding the *NA*s in the dataframe. So I did some searching and found the *na.omit()* command that seemed to work. I am not sure this is as powerful as using the *!* and *is.na()*, but it worked for me in this exercise and in lab 7. 
+
+```{r, sse_mean_function}
+rm(list = ls())
+
+sse_mean = function(x)
+{
+  sse = sd(x, na.rm = TRUE) / sqrt(length(na.omit(x)))
+  return(sse)
+}        
+
+require(palmerpenguins)
+
+sse_mean(penguins$body_mass_g)
+sse_mean(mtcars$mpg)
+```
+
+# Q2
+
+```{r, two_group_resample_function}
+dat_pen = droplevels(subset(penguins, species != "Gentoo"))
+
+x = dat_pen$flipper_length_mm
+n_1 = 68
+n_2 = 152
+
+two_group_resample = function(x, n_1, n_2)
+{ 
+  dat_1 = sample(x, n_1, replace = TRUE)
+  dat_2 = sample(x, n_2, replace = TRUE)
+
+  difference_in_means = 
+    mean(dat_1, na.rm = TRUE) - mean(dat_2, na.rm = TRUE)
+  
+  return(difference_in_means)
+}
+
+```
+
+# Q3
+
+Monte Carlo because this resampling and shuffling all values by removing any association to the species within the penguin data, thus it is simulating a null hypothesis in that there is no difference in flipper length between the two species. 
+
+# Q4
+
+```{r, run_two_group_resample_for_loop_and_histogram}
+n = 2000
+mean_differences = c()
+for (i in 1:n)
+{
+  mean_differences = c(
+    mean_differences, 
+    two_group_resample(dat_pen$flipper_length_mm, 68, 152))
+}
+
+hist(mean_differences, 
+     main = "Histogram of Mean Differences \n Flipper Length of Chistrap and Adelie Penguins",
+     xlab = "differences in means")
+
+```
+
+# Q5
+
+None of the resampled difference of means were greater than 5.8  
+
+```{r}
+
+sum(abs(mean_differences > 5.8)) 
+
+#or 
+
+t_test = t.test(dat_pen$flipper_length_mm ~ dat_pen$species)
+diff_observed = round(diff(t_test$estimate), digits = 3)
+sum(abs(mean_differences > diff_observed)) 
+
+```
+
+# Q6
+
+At least more than 10,000,000, any less than that, there would be a slim chance that the mean would be greater than 5.8. Increasing the number of simulations beyond 10,000,000 will increase the chance that the mean would be greater than 5.8.   
+
+
+# Resampling a different variable {.tabset .tabset-pills}
+
+## Code for aggregate
+
+```{r}
+# use aggregate to calculate group means and difference in means
+
+agg_means = aggregate(
+  bill_length_mm ~ species,
+  data = dat_pen, 
+  FUN = mean, 
+  na.rm = TRUE)
+diff_crit = diff(agg_means[, 2])
+
+agg_means
+diff_crit
+```
+
+## Code for t-test
+
+```{r}
+# Conduct a t-test and observe the p-value
+
+t_test_bill = t.test(dat_pen$bill_length_mm ~ dat_pen$species)
+t_test_bill
+
+```
+## Code for resampling
+
+```{r}
+#resampling test with 1000 repetitions using two_group_resample
+n = 1000 
+mean_differences_bill = c()
+for (i in 1:n)
+{
+  mean_differences_bill = c(
+    mean_differences_bill, 
+    two_group_resample(dat_pen$bill_length_mm, 68, 152))
+}
+```
+
+
+
+# Q7
+
+```{r}
+boxplot(bill_length_mm ~ species, data = dat_pen,
+        main = "Boxplot of Penguin Bill Length",
+        xlab = "Species", ylab = "Bill length (mm)")
+```
+
+# Q8
+
+Group means for the two species are: chinstrap = 48.83382 and adelie = 38.79139. The difference between means is 10.04243.
+
+
+# Q9
+
+If we were to test a hypothesis that there is no difference in bill length between chinstrap and adelie penguins, e.g., the null hypothesis, and an alternative hypothesis is that there is a difference in bill length between these two species, we can look at the p-value of samples of these measurements. Our p-value is less than 2.2e-16; this is a very, very, very  small value. Therefore, with this p-value we can reject the null hypothesis and surmise that it is likely that there is a difference in bill length between the chinstrap and adelie penguins based on our samples.  
+
+
+# Q10
+
+0
+
+```{r}
+
+sum(abs(mean_differences_bill > diff_crit)) 
+
+```
+
+# Q11
+
+```{r}
+
+hist(mean_differences_bill, 
+     main = "Differences in Means \n Chinstrap and Adelie Penguin Bill Length",
+     xlab = "differences in means")
+
+```

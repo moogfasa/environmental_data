@@ -1,0 +1,135 @@
+---
+title: "Data exploration and deterministic functions"
+author: "Mandy Klehr - I worked with John, Matt, Heather, Tim, Jahiya, and Julio"
+date: "9/26/2021"
+output:
+  html_document:
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+---
+
+```{r, echo=FALSE, message=FALSE, results=FALSE}
+require(here)
+here("data", "hab.sta.csv")
+read.csv(here("data", "hab.sta.csv"))
+require("scales")
+dat_habitat = data.frame(read.csv(here("data", "hab.sta.csv")))
+head(dat_habitat)
+
+```
+
+
+# Q1
+
+R Code and Histograms Below: 
+
+```{r fig.height=8.5, fig.width=11}
+par(mfrow = c(2, 2))
+
+hist(dat_habitat$elev,
+     main = "Histogram of study site elevation",
+     xlab = "Elevation (m)", breaks = 5)
+
+hist(dat_habitat$slope, 
+     main = "Histogram of study site slope",
+     xlab = "Slope (%)", breaks = 7)
+
+hist(dat_habitat$aspect, 
+     main = "Histogram of study site aspect",
+     xlab = "Aspect (degrees)", breaks = 20)
+
+```
+
+# Q2
+
+Elevation recorded at the study sites varies from o to 1,000 meters. It appears that most sampling occurred at sites with low elevation, with the most sampling sites at elevations between 200 and 400 meters. The elevation of the sampling sites are not evenly distributed, again with most within the 200 and 400 meter range. 
+
+# Q3
+
+Slope is measured as a percent and is numeric with values between 0 and 110. 
+
+# Q4
+
+Slope recorded at the study sites varies from 0 to 110. It appears that most sampling sites were not flat and had a slope between 40 and 60%. There appear to be more sites that are flat or moderately steep, and very few sites that were very steep with a slope greater than 80%.    
+
+# Q5
+
+Aspect is the orientation of the slope (i.e., North, South, East, West) and is measured in degrees in a clockwise direction from 0 to 360 where 0 is north-facing, 90 is east-facing, 180 is south-facing, and 270 is west-facing. 
+
+# Q6
+
+Aspect recorded at the study sites appears to be fairly evenly distributed, although it appears that there were fewer sites on southeast- and south-facing slopes between 150 and 200 degrees. It does appear that most sites were located on southwest-facing slopes, e.g., the tallest bar on the histogram is approximately between 225 and 250 degrees. However, there were also many sites on north- and west-facing slopes at 0-25 and 275-300 degrees, respectively.      
+
+
+# Q7
+
+R code and scatter plots below: 
+
+```{r}
+line_point_slope = function(x, x1, y1, slope)
+{
+  get_y_intercept = 
+    function(x1, y1, slope)
+      return(-(x1 * slope) + y1)
+  
+  linear =
+    function(x, yint, slope)
+      return(yint + x * slope)
+  
+  return(linear(x, get_y_intercept(x1, y1, slope), slope))
+}
+```
+
+```{r fig.height=7.5, fig.width=10}
+par(mfrow = c(2,2))
+plot(dat_habitat$elev, dat_habitat$ba.tot,
+     main = "Basal area and elevation", 
+     ylab = "Total Basal Area (m2/ha)", 
+     xlab = "Elevation (m)",
+     col = alpha("blue", 0.3), pch = 20, cex = 0.8)
+data_center_x.e = mean(dat_habitat$elev)
+data_center_y.e = mean(dat_habitat$ba.tot)
+curve(
+  line_point_slope(
+    x, 
+    data_center_x.e,
+    data_center_y.e, 
+    0.45), col = "red", lwd = 2, 
+  add = TRUE)
+
+plot(dat_habitat$aspect, dat_habitat$ba.tot,
+     main = "Basal area and aspect", 
+     ylab = "Total Basal Area (m2/ha)", 
+     xlab = "Aspect (degrees)", 
+     col = alpha("purple", 0.3), pch = 20, cex = 0.8)
+data_center_x.a = mean(dat_habitat$aspect)
+data_center_y.a = mean(dat_habitat$ba.tot)
+curve(
+  line_point_slope(
+    x, 
+    data_center_x.a,
+    data_center_y.a, 
+    0.15), col = "red", lwd = 2, 
+  add = TRUE)
+
+plot(dat_habitat$slope, dat_habitat$ba.tot,
+     main = "Basal area and slope", 
+     ylab = "Total Basal Area (m2/ha)", 
+     xlab = "Slope (%)",
+     col = alpha("cyan3", 0.3), pch = 20, cex = 0.8)
+data_center_x.s = mean(dat_habitat$slope)
+data_center_y.s = mean(dat_habitat$ba.tot)
+curve(
+  line_point_slope(
+    x,
+    data_center_x.s,
+    data_center_y.s,
+    0.45),
+  add = TRUE, col = "red", lwd = 2)
+```
+
+# Q8
+
+None of the terrain variables (i.e., elevation, aspect, slope) appear to have a distinct relationship with total basal area. For elevation and basal area, there is a relatively dense "cluster" of points between 0 and 50 m2/ha for total basal area and at elevations between approximately 300 and 400 m. Also around elevations of 300-400 m, it appears that there are some points that have much higher total basal areas, ranging from 100 to greater than 200 m2/ha. For aspect and basal area, there is no clear association, the data points are distributed across both axes. Data points for total basal area primarily range from 0-50 m2/ha with some above 100 m2/ha, but are dispersed almost "randomly" at aspects from 0 to 360 degrees.Similar to aspect, there is no clear association for total basal area and slope. Linear models for these data do not appear to be a good fit, because there is no clear positive or negative relationship between total basal area and these terrain variables.     
+

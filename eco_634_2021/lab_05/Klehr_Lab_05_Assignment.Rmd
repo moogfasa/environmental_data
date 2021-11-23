@@ -1,0 +1,311 @@
+---
+title: 'Lab 05: Uncertainty, Samples, and Populations'
+author: "Mandy Klehr --- I worked with Matt, Heather, Jahiya, John, Bonnie, and Erica"
+date: "10/17/2021"
+output:
+  html_document:
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+---
+
+```{r, echo=FALSE, message=FALSE, results=FALSE, warning = FALSE, fig.show = 'hide'}
+#create Ricker function
+
+ricker_fun = function(x, a, b) 
+{
+  return(a * x * exp(-b * x))
+}
+
+#plot a = 1, b = 1
+curve(
+  ricker_fun(x, 1, 1), 
+  from = 0, to = 5, add = FALSE, 
+  main = "Ricker function: a = 1, b = 1",
+  ylab = "f(x)", xlab = "x")
+
+dev.off()
+
+#create exponential function
+exp_fun = function(x, a, b)
+{
+  return(a * exp(-b * x))
+}
+
+#create a curve of exponential function
+
+curve(
+  exp_fun(x, 0.5, 1),
+  from = 0, to = 10, add = FALSE,
+  main = "Exponential function", 
+  ylab = "f(x)", xlab = "x")
+
+curve(
+  exp_fun(x, 2.2, 1/15), add = FALSE, from = 0, to = 50,
+  ann = FALSE, axes = TRUE, ylab = "f(x)")
+
+
+#test if looks like Mike's 
+
+curve(
+  exp_fun(x, 2.2, 1/15), add = FALSE, from = 0, to = 50,
+  ann = FALSE, axes = TRUE, ylab = "f(x)")
+
+
+#seed the RNG so we can reporduce our results
+
+set.seed(1234567)
+
+#specify the x-range and number of points:
+n_pts = 50
+x_min = 2
+x_max = 10
+
+#generate the x-values
+
+x_sim = runif(n_pts, min = x_min, max = x_max)
+
+#Choose intercept and slope for deterministic model and generated predicted y values
+
+param_intercept = 2.3
+param_slope = 0.67
+y_pred = param_intercept + x_sim * param_slope
+plot(x_sim, y_pred, main = "Simulated Dad\nNo Errors", xlab = "", ylab = "")
+
+#add normally-distributed noise to generate 'observed' y-values:
+error_mean = 0
+error_sd = 0.25
+
+y_observed = 
+  y_pred +
+  rnorm(
+    n = n_pts,
+    mean = error_mean, 
+    sd = error_sd)
+plot(x_sim, y_observed, main = "Normally Distributed Errors\n Constant Variance", xlab = "", ylab = "")
+
+#more sophisticated stochastic model
+error_mean = 0
+error_sd = 0.1
+
+y_observed_2 = 
+  y_pred + 
+  rnorm(
+    n = n_pts, 
+    mean = error_mean, 
+    sd = error_sd * x_sim)
+
+par(mfrow = c(1, 2))
+plot(x_sim, y_observed, main = "Normally Distributed Errors\n Constant Variance", xlab = "", ylab = "")
+plot(x_sim, y_observed_2, main = "Normally Distributed Errors\n Increasing Variance", xlab = "", ylab = "")
+
+#rexp exponentially errors 
+
+y_observed_3 = 
+  y_pred + 
+  rnorm(
+    n = rexp(n = n_pts, rate = 1), 
+    mean = error_mean,
+    sd = error_sd * x_sim)
+
+par(mfrow = c(1, 2))
+plot(x_sim, y_observed, main = "Normally Distributed Errors\n Constant Variance", xlab = "", ylab = "")
+plot(x_sim, y_observed_3, main = "Exponentially Distributed Errors", xlab = "", ylab = "")
+
+#examine histograms of residuals
+par(mfrow = c(3, 1))
+hist(y_observed - y_pred, main = "sim data 1", xlab = "observed y=values")
+hist(y_observed_2 - y_pred, main = "sim data 2", xlab = "observed y=values")
+hist(y_observed_3 - y_pred, main = "sim data 3", xlab = "observed y=values")
+
+
+```
+
+# Q1
+
+R Code for exp_fun
+```{r}
+exp_fun = function(x, a, b)
+{
+  return(a * exp(-b * x))
+}
+```
+
+# Q2
+
+```{r}
+curve(exp_fun(x, 1.9, 0.1),
+  from = 0, to = 20, 
+  main = "Four negative exponential curves", 
+  ylab = "f(x)", xlab = "x", col = "black", lty = "solid",
+  ylim = c(0, 2))
+
+curve(exp_fun(x, 1.9, 0.3), 
+      add = TRUE, col = "black", lty = "dotted")
+
+curve(exp_fun(x, 1.2, 0.2), 
+      add = TRUE, col = "red", lty = "solid")
+
+curve(exp_fun(x, 1.2, 0.4), 
+      add = TRUE, col = "red", lty = "dotted")
+```
+
+# Q3
+
+The starting point of the exponential curve's slope changes when parameter a is changed. For example, when changing from 1.9 to 1.0 it shifts from the upper limit of the y-axis at 1.9 to near the center of the y-axis at 1.0.   
+
+# Q4
+
+When changing the parameter b value to a higher number, the steepness of the exponential curve changes, or in other words the slope of the first half of the curve and the point on the x-axis at which it "bends". For example, when changing from 0.1 in the first plotted curve to 0.7, the curve moves closer to a vertical line and has a "deeper" bend closer to 4 on the x-axis than the slight bend of the curve with b = 0.1. Alternatively, there is less of a curve and the line is almost flat when the b parameter is closer to true zero, e.g., a b value of 0.00001 is almost flat. 
+
+# Q5
+
+```{r}
+ricker_fun = function(x, a, b) 
+{
+  return(a * x * exp(-b * x))
+}
+
+curve(ricker_fun(x, 25, 0.1),
+  from = 0, to = 30, 
+  main = "Six Ricker function curves", 
+  ylab = "f(x)", xlab = "x", col = "black", lty = "solid")
+
+curve(ricker_fun(x, 20, 0.2), 
+      add = TRUE, col = "black", lty = "dotted")
+
+curve(ricker_fun(x, 10, 0.2), 
+      add = TRUE, col = "black", lty = "dotted")
+
+curve(ricker_fun(x, 75, 0.3), 
+      add = TRUE, col = "red", lty = "solid")
+
+curve(ricker_fun(x, 50, 0.3), 
+      add = TRUE, col = "red", lty = "dotted")
+
+curve(ricker_fun(x, 40, 0.3), 
+      add = TRUE, col = "red", lty = "dotted")
+
+```
+
+# Q6
+
+Changing the parameter a values changes the "height" of the curve, or more precisely the first slope portion of the curve. When I changed it from 25 to 30 while keeping the value of parameter b the same, the curve had the same shape but the initial slope was steeper in the plot than the first curve with a = 25 curve. This can also be seen in the three red curves of the plot produced, in which the solid, red line at a = 75 has a steeper initial slope and overall taller curve than the subsequent two red, dotted lines at a = 50 and 40, respectively.   
+
+# Q7
+Changing the parameter b values shifts the peak of the curve to the right or left, in that when changing from 0.2 to 0.1 the top of the peak shifts from the left of the plot to the right. Then if changing from 0.2 to 0.3 or higher, the peak will shift further left. Also, the combination of both parameters influences the overall height of the curve. I noticed this when I changed a few parameters to be a single digit, and the curves, although different in position on the x-axis and steepness of slope, were essentially the same height in relation to the y-axis. Particularly a curve with a = 20 and b = 0.2 and a scond curve with a = 10 and b = 0.1. 
+
+# Q8
+
+The values I chose for the linear model were slope = -0.00045, x1 = 45, and y1 = 0.6. I chose these values specifically because the data in the scatterplot appears to show a slight negative association between the standardized dispersal rate and distance class. I chose 0.6 for y1 because by eyeballing the relationship, it seemed like that was the point on the y-axis where the start of the slope was most logical. Otherwise, it was a bit of plug and play to get the values for x1 and slope to try to best fit the data in the scatterplot.    
+
+# Q9
+
+```{r}
+require(here)
+dat_dispersal = data.frame(read.csv(here("data", "dispersal.csv")))
+
+line_point_slope = function(x, x1, y1, slope)
+{
+  get_y_intercept = 
+    function(x1, y1, slope) 
+      return(-(x1 * slope) + y1)
+    
+  linear = 
+    function(x, yint, slope) 
+      return(yint + x * slope)
+    
+  return(linear(x, get_y_intercept(x1, y1, slope), slope))
+}
+
+plot(dat_dispersal$dist.class, dat_dispersal$disp.rate.ftb, 
+     main = "Marbled salamander first-time breeders dispersal \n Linear model fit",
+     xlab = "distance class",
+     ylab = "Standardized dispersal rate", 
+     pch = 17)
+curve(line_point_slope(x, 45, 0.6, -0.00045),
+      add = TRUE, col = "purple")
+
+```
+
+# Q10
+
+The values I chose for the exponential model were a = 0.8 and b = 0.0019. For this one I started with both values at 0.5 to see how varying each would fit with the marbled salamander data in the scatterplot. This was a flat line at the bottom, so I then played around with changing the value of the tens place and also adding zeros of the b parameter first and then a when the b parameter value seemed to be a decent fit. I would then adjust the b further after adjusting the a if it seemed like it was needed. Once I reached these two values, they seemed to be the best fit to show the curve of the points with a few outliers above and below.   
+
+# Q11
+
+```{r}
+plot(dat_dispersal$dist.class, dat_dispersal$disp.rate.ftb, 
+     main = "Marbled salamander first-time breeders dispersal \n exponential model fit",
+     xlab = "distance class",
+     ylab = "Standardized dispersal rate", 
+     pch = 17)
+curve(exp_fun(x, 0.8, 0.0019),
+      add = TRUE, col = "purple")
+```
+
+
+# Q12
+
+The values I chose for the Ricker function were a = 0.0102 and b = 0.0049. Similar to the exponential curve, I started with the a and b parameters at a specific value, this time 0.005. This created a curve that was pretty close to the data and from there I just incrementally changed either the a or b parameter values to make a decent fit for the dispersal data.  
+
+# Q13
+
+```{r}
+plot(dat_dispersal$dist.class, dat_dispersal$disp.rate.ftb, 
+     main = "Marbled salamander first-time breeders dispersal \n Ricker model fit",
+     xlab = "distance class",
+     ylab = "Standardized dispersal rate", 
+     pch = 17, xlim = c(-10, 1500))
+curve(ricker_fun(x, 0.0102, 0.0049),
+      from = 0, to = 1500,
+      add = TRUE, col = "purple")
+```
+
+# Q14
+
+```{r}
+#calculate predicted values of each models fit and add to data frame
+
+dat_dispersal$predicted_linear = 
+  line_point_slope(dat_dispersal$dist.class, 45, 0.6, -0.00045)
+
+dat_dispersal$predicted_exp = 
+  exp_fun(dat_dispersal$dist.class, 0.8, 0.0019)
+
+dat_dispersal$predicted_ricker = 
+  ricker_fun(dat_dispersal$dist.class, 0.0102, 0.0049)
+
+#calculate residuals for each model and add to data frame
+
+dat_dispersal$resids_linear = 
+  dat_dispersal$predicted_linear - dat_dispersal$disp.rate.ftb
+
+dat_dispersal$resids_exp = 
+  dat_dispersal$predicted_exp - dat_dispersal$disp.rate.ftb
+
+dat_dispersal$resids_ricker = 
+  dat_dispersal$predicted_ricker - dat_dispersal$disp.rate.ftb
+
+head(dat_dispersal)
+
+```
+
+# Q15
+
+```{r}
+par(mfrow = c(2, 2))
+hist(dat_dispersal$resids_linear,
+     main = "Linear Model Residuals Histogram",
+     xlab = "Model Residuals", col = "lightcyan3")
+
+hist(dat_dispersal$resids_exp,
+     main = "Exponential Model Residuals Histogram",
+     xlab = "Model Residuals", col = "lightcyan4")
+
+hist(dat_dispersal$resids_ricker,
+     main = "Ricker Model Residuals Histogram",
+     xlab = "Model Residuals", col = "darkslategray4")
+
+```
+

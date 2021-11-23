@@ -1,0 +1,145 @@
+---
+title: 'Lab 02: R Fundamentals 2'
+author: "Amanda Klehr --- I worked with John, Matt, Heather, Julio, and Bonnie"
+date: "9/19/2021"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    df_print: paged
+---
+
+# Intermediate Logical Subsetting I 
+
+### Q1 
+Self-contained code for vec_2 below: 
+
+```{r}
+n = 12345
+vec_1 = sample(12, n, replace = TRUE)
+head(vec_1)
+
+vec_2 = (vec_1 == 3)
+
+vec_1[vec_2]
+```
+
+### Q2 
+It returns several rows of data with the "3"s extracted and because there are so many there are actually several entries that are then omitted. It is also time consuming and difficult to know where those values actually sit among others that are not "3", i.e., FALSE.  
+
+
+# Intermediate Logical Subsetting II
+
+```{r}
+n = 12345
+vec_1 = sample(12, n, replace = TRUE)
+head(vec_1)
+```
+
+Use the function length( ) to determine how many elements are in vec_1
+
+```{r}
+length(vec_1)
+
+sum(vec_1 == 3)
+```
+
+Example of running the code to generate the sum of elements with value 3 several times: 
+
+```{r}
+n = 10
+vec_1 = sample(12, n, replace = TRUE)
+paste0("Sum of elements with value 3: ", sum(vec_1 == 3))
+```
+
+```{r}
+n = 10
+vec_1 = sample(12, n, replace = TRUE)
+paste0("Sum of elements with value 3: ", sum(vec_1 == 3))
+```
+
+```{r}
+n = 10
+vec_1 = sample(12, n, replace = TRUE)
+paste0("Sum of elements with value 3: ", sum(vec_1 == 3))
+```
+```{r}
+n = 10
+vec_1 = sample(12, n, replace = TRUE)
+paste0("Sum of elements with value 3: ", sum(vec_1 == 3))
+```
+
+### Q3
+The vectors are randomly generated each time the code is run and as a result there is a different amount of elements with a value of "3". Therefore, the sum is different each time the code is run. 
+
+### Q4
+A logical test is a safe way to select the elements or entries with a value of 3 because it will return those that are true, and reduces the risk of error. If we were to try to select those values manually, for instance, there is lots of room for making an error in selecting values that are not 3 or missing some that are a value of 3.  
+
+### Q5
+The easiest answer is that it takes too long to do by hand and also there is more room for human error to identify all of the elements that have a certain value. If it is written in code that can be easily shared and used by collaborators, especially for large datasets, then it would reduce the risk of human error.   
+
+# Basic Loops
+
+### Q6
+Self contained code included below:
+
+```{r}
+
+for (i in 1:10)
+{
+  print(paste0("This is loop interation: ", i))
+}
+      
+```
+
+# Intermediate Loops
+
+### Q7
+Self-contained code included below:
+
+```{r}
+n = 66
+for (i in 1:n)
+{
+  print(i)
+}
+```
+
+
+# Intermediate Loops 2
+
+### Q8
+
+```{r}
+n = 17
+vec_1 = sample(10, n, replace = TRUE)
+vec_1
+
+for (i in 1:n)
+{
+  print(paste0("The element of vec_1 at index ", i, " is ", vec_1[i]))
+}  
+```
+
+# Functions
+
+### Q9
+
+I could not work this one out right... and sending in my broken code so my assignment isn't late. I tried several iterations of random things, even using rnorm() and nothing worked for me. Hopefully, can build on this in another lab or class assignment.
+```{r}
+create_and_print_vec = function(n, min = 1, max = 10)
+{
+  vec_1 = sample(min:max, n, replace = TRUE)
+  for (i in 1:n)
+  {
+    print(paste0("The element at index ", i, " is ", vec_1[i]))
+  }
+}
+
+create_and_print_vec(5, min = 1, max = 20)
+
+
+        
+```
+
+

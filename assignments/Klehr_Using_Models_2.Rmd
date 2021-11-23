@@ -1,0 +1,103 @@
+---
+title: 'In-Class Assignment: Using Models 2'
+author: "Mandy Klehr -- I worked with John, Matt, and Bonnie"
+date: "11/28/2021"
+output:  
+  html_document:
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+---
+
+```{r, echo = FALSE}
+require(palmerpenguins)
+t.test(subset(penguins, species == "Gentoo")$flipper_length_mm)
+
+t.test(subset(penguins, species == "Gentoo")$flipper_length_mm, mu = 218)
+
+t.test(subset(penguins, species == "Gentoo")$flipper_length_mm, mu = 218, alternative = "less")
+
+t.test(flipper_length_mm ~ species, data = subset(penguins, species != "Chinstrap"))
+
+dat_adelie = subset(penguins, species == "Adelie")
+
+dat_gentoo = subset(penguins, species == "Gentoo")
+
+t.test(dat_adelie$flipper_length_mm, dat_gentoo$flipper_length_mm, alternative = "less")
+
+
+```
+
+
+
+# Q1
+
+```{r boxplot}
+
+require(palmerpenguins)
+
+bxplt = boxplot(body_mass_g ~ sex * species,
+                data = penguins,
+                plot = FALSE)
+
+
+boxplot(body_mass_g ~ sex * species, 
+    data = penguins, 
+    main = "Body mass of penguins \n by sex and species",
+    ylab = "Body mass (g)",
+    names = gsub("\\.", "\n", bxplt$names),
+    las = 2,
+    xlab = '')
+```
+
+# Q2
+
+*Based on the boxplots, do you think male penguins (of any species) are significantly heavier than female penguins? Explain your reasoning.*
+
+Based on the boxplots it appears that male penguins are significantly heavier than female penguins as the 
+
+
+# Q3
+
+*Do you think adding sex to a model that already includes species will improve the model fit?*
+
+*Make sure you justify your answer based on the boxplots and not results of a statistical test.*
+
+
+# Q4
+
+```{r}
+fit_both = lm(formula = body_mass_g ~ sex * species, data = penguins)
+
+summary(fit_both)
+```
+
+
+# Q5
+
+Female Adelie penguins is the base case for the two-way model that includes sex and species. 
+
+
+# Q6
+
+The two coefficients that we would need to calculate the average mass of female Chinstrap penguins are (Intercept) and speciesChinstrap. 
+
+
+# Q7
+
+If it is calculated as 3368.84 (the intercept coefficient) plus 158.37 (the speciesChinstrap coefficient), then the average mass of female Chinstrap penguins is 3527.21 g. 
+
+
+# Q8
+
+3527.206 g
+
+```{r}
+
+dat_chin = subset(penguins, species == "Chinstrap")
+dat_fchin = subset(dat_chin, sex == "female")
+mean(dat_fchin$body_mass_g)
+
+#chin_female = aggregate(penguins$body_mass_g, by = list(penguins$species == "Chinstrap", penguins$sex == "female"), FUN = mean)
+#mean(chin_female$x)
+```

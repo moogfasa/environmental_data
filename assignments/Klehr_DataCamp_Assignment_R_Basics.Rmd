@@ -1,0 +1,129 @@
+---
+title: "DataCamp Assignment: R Basics"
+author: Mandy Klehr
+date: 9/10/2021
+output: 
+  html_document:
+    theme: spacelab 
+    toc: TRUE
+    toc_float: TRUE
+---
+
+# Section 1: Variables
+
+```{r}
+a = "Mandy"
+b1 = 45.6
+b2 = "45.6"
+c1 = c(0, 1, 2, 3)
+
+b1 + c1
+```
+
+### Questions 
+
+1. What type of data is contained in the variable a?
+  - character
+
+2.	What type of data is contained in the variable b1?
+  - numeric
+
+3.	What type of data is contained in the variable b2?
+  - character
+
+4.	What happens when you add b1 and b2 and why?
+ -  R generates an error message because that operation is trying to add a numeric variable to a character, as is described in the error message: “non-numeric argument to binary operator” 
+
+5.	Are the variables b1 and c1 of the same type?
+  - Yes, they are both numeric. However, b1 is a single number, and c1 is a string of numbers.
+
+6.	Explain what happens when you add b1 and c1. Consider both the number of elements in each variable and the data types.
+  - A string of numbers are returned because b1 as a single numeric (45.6) is added to all of the numbers within c1 as a string, thus 4 numbers are returned = [1] 45.6 46.6 47.6 48.6 
+
+# Section 2: Vectors
+
+### Questions
+
+7. R code for *v1* below:
+```{r}
+v1 = c(-2:2)
+v1
+```
+
+8. R code for *v2* below: 
+
+```{r}
+v2 = v1 * 3
+v2
+```
+
+9. R code for *sum of v2* below:
+```{r}
+sum(v2)
+```
+
+# Section 3: Matrices
+
+### Questions
+
+10. R code for *mat_1* below:
+
+```{r}
+vec_4 = (1:12)
+mat_1 = matrix(vec_4, nrow = 3,
+              ncol = 4, byrow = TRUE)
+mat_1
+```
+
+11. R code for *mat_2* below: 
+
+```{r}
+mat_2 = matrix(vec_4, nrow = 3, 
+               ncol = 4, byrow = FALSE)
+mat_2
+```
+
+# Section 3: Lists
+
+### Questions
+
+12. R code for creating *my_list_1* below:
+
+```{r}
+my_list_1 = list(5.2, "five point two", 0:5)
+names(my_list_1) = c("two", "one", "three")
+my_list_1
+```
+
+13. R code to select the *third element* in my_list_1 below: 
+
+```{r}
+my_list_1[3]
+```
+
+14. R code to select element named *"one"* in my_list_1 below: 
+
+```{r}
+my_list_1$one
+```
+
+# Section 3: Logical Tests and Subsetting Questions
+
+### Questions
+
+15. R code to create *my_bool_vec* below: 
+
+```{r}
+my_vec = rep(1:3, 5)
+my_vec
+
+my_bool_vec = my_vec == 3
+data.frame(my_vec, my_bool_vec)
+```
+
+16. R code to perform subset of selecting elements of my_vec with value of 3 below:
+
+```{r}
+my_vec[my_bool_vec[TRUE]]
+```
+

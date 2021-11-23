@@ -1,0 +1,273 @@
+---
+title: 'Lab 08: Modeling 1'
+author: "Mandy Klehr -- I worked with Jahiya, John, Matt, Heather, Erika, Sonja, and Bonnie"
+date: "11/7/2021"
+output: html_document
+---
+
+# Penguins Questions {.tabset .tabset-pills}
+
+```{r penguins setup}
+# R code for required packages and setting up the penguin_dat and pen_boot variables
+require(palmerpenguins)
+require(simpleboot)
+require(boot)
+
+penguin_dat = droplevels(subset(penguins, species != "Gentoo"))
+
+flip_ade = subset(penguin_dat, species == "Adelie")
+flip_chin = subset(penguin_dat, species == "Chinstrap")
+
+pen_boot = two.boot(flip_ade$flipper_length_mm, flip_chin$flipper_length_mm, FUN = mean, R = 10000, na.rm = TRUE)
+
+```
+
+## Q1
+
+1.014735
+
+```{r standard deviation, results = FALSE}
+sd(pen_boot$t, na.rm = TRUE)
+mean(pen_boot$t, na.rm = TRUE)
+median(pen_boot$t, na.rm = TRUE)
+```
+
+## Q2
+
+```{r penguin bootstrap histogram}
+
+hist(pen_boot$t, 
+     main = "Histogram of 10000 bootstrap differences \n in mean penguin flipper length", 
+     xlab = "Bootsrapped difference in mean flipper length (mm) \n Adelie and Chinstrap Penguins")
+```
+
+## Q3
+
+-7.865151 to -3.898867
+
+```{r penguin boot quantile, results = FALSE}
+
+quantile(pen_boot$t, c(0.025, 0.975), 
+         na.rm = TRUE)
+
+```
+
+
+## Q4
+
+No, the resampled differences in means looks relatively normally distributed in the histogram. The mean and the median of the resampled differences are relatively the same, around -5.87 (mean = -5.866861, median = -5.863202), which also suggests a distribution that is not skewed.
+
+
+## Q5
+
+```{r}
+
+pen_ecdf = ecdf(pen_boot$t)
+
+```
+
+
+## Q6
+
+0.0891 or 8.9%
+
+```{r, results = FALSE}
+
+1 - pen_ecdf(-4.5)
+
+```
+
+
+## Q7
+
+0.0176 or 1.7%
+
+```{r, results = FALSE}
+
+pen_ecdf(-8)
+
+```
+
+## Q8
+
+The null hypothesis in our two-sample, two-tailed test is that the difference in mean flipper lengths of the two penguin species is equal to 0, meaning there is no difference in flipper lengths between the Adelie and Chinstrap penguins. 
+The alternative hypothesis is that the difference in mean flipper lengths of the two penguin species is not equal to 0, therefore, there is a difference in flipper lengths for the Adelie and Chinstrap penguins. 
+
+```{r}
+t.test(flip_ade$flipper_length_mm, flip_chin$flipper_length_mm)
+```
+
+# Vegetation Data and Questions {.tabset .tabset-pills}
+
+```{r read and create pine data in data.frame}
+#R code for setting up pine data in a data frame
+require(here)
+veg = read.csv(here("data", "vegdata.csv"))
+head(veg)
+
+dat_tree = droplevels(subset(veg, treatment %in% c("control", "clipped")))
+
+```
+
+## Q9
+
+0.1005
+
+```{r}
+
+wilcox.test(pine ~ treatment, data = dat_tree)
+```
+
+
+## Q10
+
+3.750 to 29.625 
+
+```{r, results= FALSE}
+tree_clipped = subset(dat_tree, treatment == "clipped")
+tree_control = subset(dat_tree, treatment == "control")
+
+tree_boot = 
+  two.boot(tree_clipped$pine, tree_control$pine, 
+           FUN = mean, R = 10000, na.rm = TRUE)
+
+quantile(tree_boot$t, c(0.025, 0.975))
+
+```
+
+## Q11
+
+The observed difference in mean tree counts is 16 and does fall within the 95% bootstrap CI; between 3.750 and 29.625
+
+```{r, results = FALSE}
+aggregate(pine ~ treatment, 
+          data = dat_tree, 
+          FUN = mean, 
+          na.rm = TRUE)
+
+obs_diff = 17.875 - 1.875
+print(obs_diff)
+```
+
+
+# Bird and Habitat Data and Questions {.tabset .tabset-pills}
+
+```{r}
+require(here)
+
+dat_bird = read.csv(here("data", "bird.sub.csv"))
+dat_habitat = read.csv(here("data", "hab.sub.csv"))
+
+dat_all = merge(
+  dat_bird, 
+  dat_habitat, 
+  by = c("basin", "sub"))
+
+
+b_sidi_mean = mean(dat_all$b.sidi, na.rm = TRUE)
+b_sidi_sd = sd(dat_all$b.sidi, na.rm = TRUE)
+
+#Create a new column of z-standardized values for b.sidi
+
+dat_all$b.sidi.standardized = (dat_all$b.sidi - b_sidi_mean)/b_sidi_sd
+
+dat_1 = 
+  subset(
+    dat_all, 
+    select = c(b.sidi, s.sidi))
+```
+
+## Q12
+
+The Simpson's diversity index is a measure of the diversity of a system of interest, and uses species richness and relative abundance of each species, also called evenness. 
+
+## Q13
+
+```{r}
+#Calculate the sample mean and sd of s.sidi: 
+
+s_sidi_mean = mean(dat_all$s.sidi, na.rm = TRUE)
+s_sidi_sd = sd(dat_all$s.sidi, na.rm = TRUE)
+
+#To standardize s.sidi and add a column to dat_all:
+
+dat_all$s.sidi.standardized = (dat_all$s.sidi - s_sidi_mean)/s_sidi_sd
+
+```
+
+## Q14
+
+```{r}
+
+m = 10000
+result = numeric(m)
+
+for(i in 1:m)
+{
+  index_1 = sample(nrow(dat_1), replace = TRUE)
+  index_2 = sample(nrow(dat_1), replace = TRUE)
+  
+  dat_resampled_i = 
+    data.frame(
+      b.sidi = dat_1$b.sidi[index_1],
+      s.sidi = dat_1$s.sidi[index_2]
+    )
+  
+  fit_resampled_i = lm(b.sidi ~ s.sidi, data = dat_resampled_i)
+ 
+  result[i] = coef(fit_resampled_i)[2]
+}
+
+```
+
+
+```{r, echo = FALSE, results = FALSE, warning = FALSE, fig.show = 'hide'}
+
+
+fit_1 = lm(b.sidi ~ s.sidi, data = dat_all)
+coef(fit_1)
+
+slope_observed = coef(fit_1)[2]
+
+plot(
+  b.sidi ~ s.sidi, data = dat_all, 
+  main = "Simpson's diversity indices",
+  xlab = "Vegetation cover diversity",
+  ylab = "Bird diversity")
+
+abline(fit_1)
+```
+
+
+## Q15
+
+```{r}
+hist(result, 
+     main = "Null Distribution of Regression Slope", 
+     xlab = "Slope Parameter")
+
+abline(v = slope_observed, lty = 1, col = "blue", lwd = 2)
+abline(v = quantile(result, c(0.05)), lty = 2, col = "red", lwd = 2)
+
+legend(
+  "topright",
+  legend = c("slope observed", "critical value of resampled slope"),
+  lty = c(1,2), col = c("blue", "red"), inset=c(.005,.005), bg = "beige")
+
+```
+
+
+## Q16
+
+The critical value from the resampled MC slopes was -0.01298113 and was greater than the observed slope of -0.02437131.  
+
+```{r, results = FALSE}
+quantile(result, c(0.05))
+
+slope_observed
+```
+
+
+## Q17
+
+The Simpson's diversity index appeared to indicate a negative relationship between vegetation cover diversity and bird diversity. Additionally, the null model assumed that there is no relationship between the Simpson's diversity index of birds and vegetation. The results of the analysis indicate that the calculated slope from the fitted model of the observed data is sufficiently unlikely to have occurred by chance alone as observed in the distribution of all the possible slope values in the null model that was calculated from the MC loop. The critical value at 0.05 % of the null model distribution of possible slopes is -0.013 while the value of the observed slope was smaller at -0.024.   

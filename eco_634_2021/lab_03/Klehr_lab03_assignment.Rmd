@@ -1,0 +1,159 @@
+---
+title: 'Lab 03: Data Exploration and Determinisitic Functions'
+author: "Mandy Klehr --- I worked with John, Matt, Heather, Jahiya, Tim, and Julio"
+date: "9/26/2021"
+output:
+  html_document:
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+    
+---
+
+# All Code from Running Through the Lab Assignment
+
+Add psych and use pairs.panels with iris
+```{r}
+require(psych)
+require(iris)
+pairs.panels(iris)
+
+```
+
+Add and create data frames for dat_bird and dat_habitat
+```{r}
+require(here)
+here("data", "hab.sta.csv")
+dat_bird = data.frame(read.csv(here("data", "bird.sta.csv")))
+dat_habitat = data.frame(read.csv(here("data", "hab.sta.csv")))
+head(dat_habitat)
+head(dat_bird)
+```
+
+Merge dat_bird and dat_habitat and test
+```{r}
+dat_all = merge(dat_bird, dat_habitat)
+
+plot(ba.tot ~ elev, data = dat_all)
+```
+
+See that CEDW was not recorded at several sites
+
+```{r}
+#note to self that the AOU four-letter code for cedar waxwing is not the current, CEDW
+
+sample(dat_all$CEWA, 100)
+
+sum(dat_all$CEWA)
+```
+
+Code for CEDW presence/absence and test
+
+```{r}
+cewa_present_absent = as.numeric(dat_all$CEWA > 1)
+plot(x = dat_all$elev, y = cewa_present_absent)
+```
+
+Code for logistic curve
+
+```{r}
+#Function to calculate the logistic parameter a given the slop and midpoint
+
+get_logistic_param_a = function(slope, midpoint)
+{
+  b = slope / 4
+  return (-midpoint * (slope / 4))
+}
+
+#Function to calculate the logistic parameter b given the slope
+get_logistic_param_b = function(slope)
+{
+  return (slope / 4)
+}
+
+#Calculate the value of the logistic function at x, given the parameters a and b
+
+logistic = function(x, a, b)
+{
+  val = exp(a + b * x)
+  return(val / (1 + val))
+}
+
+#Calculate the value of the logistic function at x, given a slope and midpoint
+
+logistic_midpoint_slope = function(x, midpoint, slope)
+{
+  b = get_logistic_param_b(slope)
+  a = get_logistic_param_a(slope, midpoint)
+  return(logistic(x, a, b))
+}
+
+
+```
+
+Plot a logistic curve
+
+Logistic Fit 1
+```{r}
+plot(x = dat_all$elev, y = cewa_present_absent)
+curve(logistic_midpoint_slope(x, midpoint = 400, slope = 0.1), add = TRUE)
+```
+
+Logistic Fit 2
+
+```{r}
+plot(x = dat_all$elev, y = cewa_present_absent)
+curve(logistic_midpoint_slope(x, midpoint = 400, slope = -0.1), add = TRUE)
+```
+
+Logistic Fit 3
+
+```{r}
+plot(x = dat_all$elev, y = cewa_present_absent)
+curve(logistic_midpoint_slope(x, midpoint = 400, slope = -0.05), add = TRUE)
+```
+
+# Q1
+
+Basal area is 
+
+# Q2
+Pair Plot of Basal Area and Terrain Variables
+
+```{r}
+dat_terrain = dat_all[
+  c("elev", "slope", "aspect", "ba.tot")]
+pairs.panels(dat_terrain)
+
+```
+
+# Q3
+```{r}
+wiwr_present_absent = as.numeric(dat_all$WIWR != 0)
+
+plot(x = dat_all$ba.tot, y = wiwr_present_absent, 
+     main = "Winter Wren Presence Relative to Total Basal Area", 
+     xlab = "Basal Area (m2 per ha)", 
+     ylab = "Winter Wren Presence")
+
+curve(logistic_midpoint_slope(
+  x, midpoint = 100, slope = -0.5), add = TRUE, col = "red")
+
+```
+
+# Q4
+
+```{r}
+swth_present_absent = as.numeric(dat_all$SWTH > 0)
+
+plot(x = dat_all$ba.tot, y = swth_present_absent, 
+     main = "Swainson's Thrush Presence Relative to Total Basal Area", 
+     xlab = "Basal Area (m2 per ha)", 
+     ylab = "Swainson's Thrush Presence")
+curve(logistic_midpoint_slope(
+  x, midpoint = 100, slope = -0.5), add = TRUE, col = "red")
+```
+
+
+
+

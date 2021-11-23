@@ -1,0 +1,299 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r, echo=FALSE, message=FALSE, results=FALSE, warning = FALSE, fig.show = 'hide'}
+require(here)
+
+#Create simulated data
+dat = matrix(1:49, nrow = 7, ncol = 7)
+print(dat)
+
+# margin = 1 to indicate want apply to look at rows
+#FUN = min and FUN = max to tell apply to fin min and max values
+apply(dat, MARGIN =1, FUN = max)
+
+#mean values in each column
+#Margin = 2 to indicate want columns
+
+
+apply(dat, MARGIN = 2, FUN = mean)
+
+moths = read.csv(here("data", "moths.csv"))
+head(moths)
+
+#to calculate a CI
+#first: calculate the sample standard error (sample SD and sample size to do this calculation)
+#second: choose significance level (usually 95%). The value of alpha is just 1 - significance level
+#third: using your chosen value of alpha, calculate the critical t-values.
+#fourth: multiple the sample standard error by the critical t-value. This is the radius of CI
+#fifth: express the CI as mean +_ radius
+
+#5 - 46.95 to 48.95
+
+m = 10000
+
+#numeric() creates a vector of length m with all values initialized to zero
+
+result = numeric(m)
+head(result)
+
+#perform the bootstrap
+for(i in 1:m)
+{
+  result[i] = mean(sample(moths$anst, replace = TRUE))
+}
+
+mean(result)
+
+quantile(result,c(0.025, 0.975))
+
+
+#add boot packages
+install.packages("boot")
+
+require(boot)
+#Bootstrap basic syntax
+boot(data, statistic, R)
+
+boot_mean = function(x, i)
+{
+  return(mean(x[i], na.rm = TRUE))
+}
+
+myboot = boot(data = moths$anst, statistic = boot_mean, R = 10000)
+print(myboot)
+
+str(myboot)
+
+mean(moths$anst)
+myboot$t0
+mean(myboot$t) - myboot$t0
+sd(myboot$t)
+
+quantile(myboot$t, c(0.025, 0.975))
+
+moth_dat = moths[, -1]
+head(moth_dat)
+
+n = nrow(moth_dat) #number of rows sample observation
+m = 100 #number of bootstrap iterations
+moth_result = matrix(
+  nrow = m,
+  ncol = n)
+
+#The outer loop: runs once for each bootstrap iteration. index variable is i
+for(i in 1:m)
+{
+  # The inner loop: simulates increasing sampling intensity
+  # Sampling intensity ranges from 1 site to the complete count of sites (24)
+  # index variable is j
+  for(j in 1:n)
+  {
+    # sample the input data row indices, with replacement
+    rows_j = sample(n, size = j, replace = TRUE)
+    
+    #creates a new data matrix from the resampled rows.
+    t1 = moth_dat[rows_j, ]
+    
+    #calculates the column sums of the new data matrix.
+    t2 = apply(t1, 2, sum)
+    
+    #counts the number of column in which any moths were observed
+    moth_result[i, j] = sum(t2>0)
+  }  
+}
+
+#anywhere there is n in code replace with n input rows?
+head(moth_result)
+
+rarefaction_sampler = function(input_dat, n_iterations)
+{
+  n = nrow(moth_dat) #number of rows sample observation
+  m = 100 #number of bootstrap iterations
+  moth_result = matrix(
+    nrow = m,
+    ncol = n)
+  
+  #The outer loop: runs once for each bootstrap iteration. index variable is i
+  for(i in 1:m)
+  {
+    # The inner loop: simulates increasing sampling intensity
+    # Sampling intensity ranges from 1 site to the complete count of sites (24)
+    # index variable is j
+    for(j in 1:n)
+    {
+      # sample the input data row indices, with replacement
+      rows_j = sample(n, size = j, replace = TRUE)
+      
+      #creates a new data matrix from the resampled rows.
+      t1 = moth_dat[rows_j, ]
+      
+      #calculates the column sums of the new data matrix.
+      t2 = apply(t1, 2, sum)
+      
+      #counts the number of column in which any moths were observed
+      moth_result[i, j] = sum(t2>0)
+    }  
+  }
+  
+  return(moth_result)
+}
+
+rarefact = rarefaction_sampler(moth_dat, 100)
+head(rarefact)
+
+rarefaction_sampler = function(input_dat, n_iterations)
+{
+  n_input_rows = nrow(input_dat)
+  
+  results_out = matrix(
+    nrow = n_iterations,
+    ncol = n_input_rows) #number of rows sample observation
+  
+  #The outer loop: runs once for each bootstrap iteration. index variable is i
+  for(i in 1:n_iterations)
+  {
+    # The inner loop: simulates increasing sampling intensity
+    # Sampling intensity ranges from 1 site to the complete count of sites (24)
+    # index variable is j
+    for(j in 1:n)
+    {
+      # sample the input data row indices, with replacement
+      rows_j = sample(n, size = j, replace = TRUE)
+      
+      #creates a new data matrix from the resampled rows.
+      t1 = input_dat[rows_j, ]
+      
+      #calculates the column sums of the new data matrix.
+      t2 = apply(t1, 2, sum)
+      
+      #counts the number of column in which any moths were observed
+      results_out[i, j] = sum(t2>0)
+    }  
+  }
+  
+  return(results_out)
+}
+
+rarefact = rarefaction_sampler(moth_dat, 100)
+head(rarefact)
+
+#clear r code
+rm(list = ls())
+
+moths = read.csv(here("data", "moths.csv"))
+moth_dat = moths[,-1]
+
+rarefaction_sampler = function(input_dat, n_iterations)
+{
+  n_input_rows = nrow(input_dat)
+  
+  results_out = matrix(
+    nrow = n_iterations,
+    ncol = n_input_rows) #number of rows sample observation
+  
+  #The outer loop: runs once for each bootstrap iteration. index variable is i
+  for(i in 1:n_iterations)
+  {
+    # The inner loop: simulates increasing sampling intensity
+    # Sampling intensity ranges from 1 site to the complete count of sites (24)
+    # index variable is j
+    for(j in 1:n_input_rows)
+    {
+      # sample the input data row indices, with replacement
+      rows_j = sample(n_input_rows, size = j, replace = TRUE)
+      
+      #creates a new data matrix from the resampled rows.
+      t1 = input_dat[rows_j, ]
+      
+      #calculates the column sums of the new data matrix.
+      t2 = apply(t1, 2, sum)
+      
+      #counts the number of column in which any moths were observed
+      results_out[i, j] = sum(t2>0)
+    }  
+  }
+  
+  return(results_out)
+}
+
+rarefact = rarefaction_sampler(moth_dat, 100)
+head(rarefact)
+
+#test the de-bugging
+rm(list = ls())
+
+#Re-read data: 
+moths = read.csv(here("data", "moths.csv"))
+
+rarefaction_sampler = function(input_dat, n_iterations)
+{
+  n_input_rows = nrow(input_dat)
+  
+  results_out = matrix(
+    nrow = n_iterations,
+    ncol = n_input_rows) #number of rows sample observation
+  
+  #The outer loop: runs once for each bootstrap iteration. index variable is i
+  for(i in 1:n_iterations)
+  {
+    # The inner loop: simulates increasing sampling intensity
+    # Sampling intensity ranges from 1 site to the complete count of sites (24)
+    # index variable is j
+    for(j in 1:n_input_rows)
+    {
+      # sample the input data row indices, with replacement
+      rows_j = sample(n_input_rows, size = j, replace = TRUE)
+      
+      #creates a new data matrix from the resampled rows.
+      t1 = input_dat[rows_j, ]
+      
+      #calculates the column sums of the new data matrix.
+      t2 = apply(t1, 2, sum)
+      
+      #counts the number of column in which any moths were observed
+      results_out[i, j] = sum(t2>0)
+    }  
+  }
+  
+  return(results_out)
+}
+
+rarefact = rarefaction_sampler(moths[,-1], 100)
+head(rarefact)
+
+rarefact = rarefaction_sampler(moths[,-1], 10000)
+
+rare_mean = apply(rarefact, 2, mean)
+rare_quant = apply(rarefact, 2, quantile, probs=c(0.025, 0.975))
+rare = t(rbind(rare_mean, rare_quant))
+
+matplot(
+  rare, 
+  type="l",
+  xlab = "Number of sampling plots",
+  ylab = "Species richness",
+  main = "Rarefaction Curve")
+
+legend(
+  "bottomright",
+  legend = c("mean", "2.5%", "97.5%"),
+  lty = c(1,2,3), col = c(1,2,3), inset=c(.1,.1))
+```
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+plot(cars)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.

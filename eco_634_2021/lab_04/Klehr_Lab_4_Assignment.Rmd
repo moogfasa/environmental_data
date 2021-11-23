@@ -1,0 +1,300 @@
+---
+title: 'Lab 04: Uncertainty and Error'
+author: "Mandy Klehr --- I worked with Matt, Heather, Jahiya, John, Bonnie, and Erica"
+date: "10/10/2021"
+output:
+  html_document:
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+---
+
+```{r, echo=FALSE, message=FALSE, results=FALSE, warning = FALSE, fig.show = 'hide'}
+# Generate a vector of x-values
+x = seq(-3, 3, length.out = 1000)
+y = dnorm(x)
+
+plot(x, y, main = "Normal PDF", type = "l")
+abline(h = 0)
+
+```
+
+
+```{r, echo=FALSE, message=FALSE, results=FALSE, warning = FALSE, fig.show = 'hide'}
+line_point_slope = function(x, x1, y1, slope)
+{
+  get_y_intercept = 
+    function(x1, y1, slope)
+      return(-(x1 * slope) + y1)
+  
+  linear =
+    function(x, yint, slope)
+      return(yint + x * slope)
+  
+  return(linear(x, get_y_intercept(x1, y1, slope), slope))
+}
+
+set.seed(123)
+n = 17
+slope = 0.7
+intcp = 0.2
+
+guess_x = 6
+guess_y = 4
+guess_slope = 0.72
+
+x = runif(n = n, min = 1, max = 10)
+y = rnorm(n = n, mean = slope * x + intcp)
+
+plot(x, y, pch = 16)
+
+curve(line_point_slope(x, guess_x, guess_y, guess_slope), add = T)
+```
+
+```{r, echo=FALSE, message=FALSE, results=FALSE, warning = FALSE, fig.show = 'hide'}
+set.seed(345)
+n_pts = 10
+x_min = 1
+x_max = 10
+x = runif(n = n_pts, min = x_min, max = x_max)
+
+dat = data.frame(x = x, y_observed = rnorm(n_pts))
+
+guess_x = 6
+guess_y = 0
+guess_slope = 0.1
+
+plot(y_observed ~ x, data = dat, pch = 8)
+curve(line_point_slope(x, guess_x, guess_y, guess_slope), add = T)
+
+#add predicted values
+
+line_point_slope(dat$x, guess_x, guess_y, guess_slope)
+
+#add predicted values to dataframe
+
+y_predicted = line_point_slope(dat$x, guess_x, guess_y, guess_slope)
+
+dat$y_predicted = y_predicted
+
+dat$resids = dat$y_predicted - dat$y_observed
+
+dat
+
+sum(dat$resids)
+
+abs(dat$resids)
+
+sum(abs(dat$resids))
+
+```
+# Q1
+
+R code for creating norm vectors: 
+```{r}
+norm_mean = 10.4
+norm_sd = 2.4
+
+norm_17 = rnorm(n = 17, norm_mean, norm_sd)
+norm_30 = rnorm(n = 30, norm_mean, norm_sd)
+norm_300 = rnorm(n = 300, norm_mean, norm_sd)
+norm_3000 = rnorm(n = 3000, norm_mean, norm_sd)
+
+```
+
+# Q2
+
+Code for creating histogram figure:
+```{r}
+require(here)
+png(
+    filename = here("images", "lab_04_hist_01.png"),
+    width = 1500, height = 1600,
+    res = 180) 
+
+par(mfrow = c(2, 2))
+hist(norm_17,
+     main = "Histogram of 17 Random",
+     xlab = "x",
+     col = "darkslategray2")
+hist(norm_30,
+     main = "Histogram of 30 Random",
+     xlab = "x",
+     col = "darkslategray3")
+hist(norm_300,
+     main = "Histogram of 300 Random",
+     xlab = "x",
+     col = "darkslategray4")
+hist(norm_3000,
+     main = "Histogram of 3000 Random",
+     xlab = "x",
+     col = "darkslategray")
+
+dev.off()
+```
+# Q3
+
+Histogram figure uploaded to Moodle
+
+# Q4
+
+The first two histograms for norm17 and norm30 are more "scattered" in the distribution of the x variables. When generated several times they shift from left to right and to looking more evenly distributed to be almost flat. The other two histograms for norm300 and norm3000 have a greater spread across the x variables but generally have more within the medium variables between approximately 8 and 12 and less variables towards the lower ends and higher ends of the "curve", e.g. 0 and 16. These last two appear to almost fit the bell curve shape of the standard normal distribution.   
+
+# Q5
+
+The histograms are different because each are made up of a different number of randomly generated numbers. Therefore, the higher (e.g., 300 and 3000) normally distributed random variables have a larger spread across the values of x, but also have more of a bell curve shape because the more samples of random variables, the closer they are to the standard normal distribution bell curve. Whereas the lower (e.g., 17 and 30) normally distributed random variables are not evenly distributed across the values of x and when generated numerous times they can shift either to the right or left or even have a flat distribution that almost looks like a uniform distribution. 
+
+# Q6
+
+The parameters of the standard normal distribution are mean and standard deviation, which are 0 and 1, respectively. 
+
+# Q7
+
+R code for creating normal distribution figure: 
+```{r}
+svg(
+    filename = here("images", "norm_1.svg"),
+    width = 12, height = 9) 
+
+x = seq(-20, 20, length.out = 1000)
+y = dnorm(x, mean = 10.4, sd = 2.4)
+
+plot(x, y, main = "Normal PDF: mean = 10.4, sd = 2.4", type = "l", xlim = c(4, 18))
+abline(h = 0)
+
+dev.off()
+
+```
+
+# Q8
+
+Density figure uploaded to Moodle
+
+# Q9
+
+R code for creating figures:
+```{r}
+png(
+    filename = here("images", "Random_Points_Figures.png"),
+    width = 1500, height = 1600,
+    res = 180) 
+
+#define x_min and x_max for use with all random data in this code
+x_min = 1
+x_max = 10
+
+#different numbers of points
+n_pts_1 = 20
+x1 = runif(n = n_pts_1, min = x_min, max = x_max)
+dat_1 = data.frame(x = x1, y_observed = rnorm(n_pts_1))
+
+n_pts_2 = 50
+x_min = 1
+x_max = 10
+x2 = runif(n = n_pts_2, min = x_min, max = x_max)
+dat_2 = data.frame(x = x2, y_observed = rnorm(n_pts_2))
+
+
+#different distributions
+n_pts_3 = 70
+x3 = runif(n = n_pts_3, min = 10, max = 50)
+dat_3 = data.frame(x = x3, y_observed = rnorm(n_pts_3))
+
+#experiment with set.seed
+set.seed(100)
+n_pts_4 = 30
+x4 = runif(n = n_pts_4, min = x_min, max = x_max)
+dat_4 = data.frame(x = x4, y_observed = rnorm(n_pts_4))
+
+par(mfrow = c(2, 2))
+hist(dat_1$x,
+     main = "Histogram of random points for dat_1",
+     xlab = "x",
+     col = "darkslategray4")
+
+plot(dat_2$x, dat_2$y_observed, pch = 16,
+     main = "Scatterplot of random points for dat_2",
+     xlab = "x",
+     ylab = "y_observed",
+     col = "darkslategray")
+
+boxplot(dat_3$x, dat_3$y_observed,
+        main = "Boxplot of random points for dat_3",
+        xlab = "x",
+        ylab = "y_observed",
+        col = "darkslategray4")
+
+plot(dat_4$x, dat_4$y_observed, pch = 16,
+     main = "Scatterplot of random points for dat_4",
+     xlab = "x",
+     ylab = "y_observed",
+     col = "darkslategray")
+
+
+dev.off()
+
+```
+
+# Q10
+
+Uploaded *Random_Points_Figures.png* image file to Moodle
+
+# Q11
+
+```{r}
+png(
+    filename = here("images", "Random_Points_Figure_with_Line.png"),
+    width = 1500, height = 1600,
+    res = 180) 
+
+set.seed(100)
+n_pts_4 = 30
+
+guess_x = 6
+guess_y = 0
+guess_slope = 0.1
+
+x = runif(n = n_pts_4, min = x_min, max = x_max)
+
+plot(y_observed ~ x, data = dat_4, pch = 16, 
+     main = "Scatterplot of random points for dat_4 with line",
+     col = "darkslategray")
+curve(line_point_slope(x, guess_x, guess_y, guess_slope), add = T)
+
+dev.off()
+```
+
+# Q12
+
+Uploaded *Random_Points_Figure_with_Line.png* image file to Moodle
+
+# Q13
+
+```{r}
+
+line_point_slope(dat_4$x, guess_x, guess_y, guess_slope)
+
+y_predicted = line_point_slope(dat_4$x, guess_x, guess_y, guess_slope)
+
+dat_4$y_predicted = y_predicted
+
+dat_4$resids = dat$y_predicted - dat$y_observed
+
+dat_4
+
+```
+# Q14
+
+R code for figures of residuals and predicted values:
+
+```{r}
+hist(dat_4$resids,
+     main = "Dat_4 Residuals Histogram",
+     xlab = "Model Residuals", col = "darkslategray4")
+
+plot(dat_4$y_predicted, dat_4$resids, pch = 16, col = "darkslategray4",
+     main = "Dat_4 Residuals vs. Predicted Values Scatterplot",
+     xlab = "Predicted Values",
+     ylab = "Model Residuals")
+```
+

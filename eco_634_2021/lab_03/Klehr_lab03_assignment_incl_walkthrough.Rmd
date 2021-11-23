@@ -1,0 +1,170 @@
+---
+title: 'Lab 03: Data Exploration and Determinisitic Functions'
+author: "Mandy Klehr --- I worked with John, Matt, Heather, Jahiya, Tim, and Julio"
+date: "9/26/2021"
+output:
+  html_document:
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+    
+---
+
+```{r, echo=FALSE, message=FALSE, results=FALSE, warning = FALSE, fig.show = 'hide'}
+#add psych for pairs plots 
+require(psych)
+require(iris)
+pairs.panels(iris)
+
+#Add and create data frames for dat_bird and dat_habitat
+require(here)
+here("data", "hab.sta.csv")
+dat_bird = data.frame(read.csv(here("data", "bird.sta.csv")))
+dat_habitat = data.frame(read.csv(here("data", "hab.sta.csv")))
+head(dat_habitat)
+head(dat_bird)
+
+#Merge dat_bird and dat_habitat and test
+dat_all = merge(dat_bird, dat_habitat)
+
+plot(ba.tot ~ elev, data = dat_all)
+
+#See that CEDW was not recorded at several sites
+#note to self that the AOU four-letter code for cedar waxwing is not the current, CEDW
+
+sample(dat_all$CEWA, 100)
+
+sum(dat_all$CEWA)
+
+#Code for CEDW presence/absence and test
+cewa_present_absent = as.numeric(dat_all$CEWA > 1)
+plot(x = dat_all$elev, y = cewa_present_absent)
+
+#Code for logistic curve
+#Function to calculate the logistic parameter a given the slop and midpoint
+
+get_logistic_param_a = function(slope, midpoint)
+{
+  b = slope / 4
+  return (-midpoint * (slope / 4))
+}
+
+#Function to calculate the logistic parameter b given the slope
+get_logistic_param_b = function(slope)
+{
+  return (slope / 4)
+}
+
+#Calculate the value of the logistic function at x, given the parameters a and b
+
+logistic = function(x, a, b)
+{
+  val = exp(a + b * x)
+  return(val / (1 + val))
+}
+
+#Calculate the value of the logistic function at x, given a slope and midpoint
+
+logistic_midpoint_slope = function(x, midpoint, slope)
+{
+  b = get_logistic_param_b(slope)
+  a = get_logistic_param_a(slope, midpoint)
+  return(logistic(x, a, b))
+}
+
+#Plot a logistic curve
+#Logistic Fit 1
+plot(x = dat_all$elev, y = cewa_present_absent)
+curve(logistic_midpoint_slope(x, midpoint = 400, slope = 0.1), add = TRUE)
+
+#Logistic Fit 2
+plot(x = dat_all$elev, y = cewa_present_absent)
+curve(logistic_midpoint_slope(x, midpoint = 400, slope = -0.1), add = TRUE)
+
+#Logistic Fit 3
+plot(x = dat_all$elev, y = cewa_present_absent)
+curve(logistic_midpoint_slope(x, midpoint = 400, slope = -0.05), add = TRUE)
+
+```
+
+
+# Q1 Basal Area
+
+Basal area is an estimate of the cross-sectional area (usually in square feet) of a tree or trees 4.5 feet above the ground. This usually entails measuring the diameter at breast height (dBH; ~4-4.5 feet above ground) of trees and then using that to calculate tree stand density for the number of standing trees and woody stems within a sample plot (e.g., a 50-m radius plot). In these habitat data, basal area is measured as the total of both live (hardwood and conifers) and dead trees (i.e., snag) within the sample sites and the units are square meters (m2) per hectare (ha).
+
+# Q2 Terrain and Basal Area Pair Plots
+
+```{r}
+dat_terrain = dat_all[
+  c("elev", "slope", "aspect", "ba.tot")]
+pairs.panels(dat_terrain)
+
+```
+
+# Q3 Fitted Logistic Model
+```{r}
+wiwr_present_absent = as.numeric(dat_all$WIWR != 0)
+
+plot(x = dat_all$ba.tot, y = wiwr_present_absent, 
+     main = "Winter Wren Presence Relative to Total Basal Area", 
+     xlab = "Total Basal Area (m2 per ha)", 
+     ylab = "Winter Wren Presence", breaks = 5)
+
+curve(logistic_midpoint_slope(
+  x, midpoint = 125, slope = -0.7), add = TRUE, col = "red")
+
+```
+
+# Q4 Model Interpretation
+
+Based on the logistic curve of winter wren presence to total basal area, the species is more abundant in stands that are sparse or less dense; total basal area ranging from 0-100 m2/ha. The species was also recorded at sites with a total basal area of more than 100 m2/ha, but only at a few sites. The logistic model does not seem like a good fit primarily because of the observations of the species recorded in stands with total basal area > 100 m2/ha. It would probably be better to compare presences to basal area of conifer or hardwood trees rather than the total (conifers, hardwoods, and snags) to identify if winter wren is more likely to occur in stands dominated by conifers or hardwoods.    
+
+# Q5 Fitted Logistic Model
+```{r}
+rbsa_present_absent = as.numeric(dat_all$RBSA != 0)
+
+plot(x = dat_all$ba.tot, y = rbsa_present_absent, 
+     main = "Red-breasted Sapsucker Presence Relative to Total Basal Area", 
+     xlab = "Total Basal Area (m2 per ha)", 
+     ylab = "Red-breasted Sapsucker Presence")
+
+curve(logistic_midpoint_slope(
+  x, midpoint = 60, slope = -0.7), add = TRUE, col = "red")
+```
+
+# Q6 Model Interpretation
+
+Based on the logistic curve of red-breasted sapsucker presence to total basal area, the species is more abundant in stands that are sparse or less dense; total basal area ranging from 0 a little more than 50 m2/ha. The logistic model seems like a decent fit; however, I think it would be more interesting to look at basal area of coniferous or hardwood tress with this species, and/or snags because as a species of woodpecker, red-breasted sapsucker may have a preference for stands dominated by conifers over hardwoods, and snags within both types of stands. 
+
+# Q7 Jay Abundance
+
+181
+
+# Q8 Jay Abundance R Code
+
+```{r}
+require(here)
+dat_bird = data.frame(read.csv(here("data", "bird.sta.csv")))
+dat_habitat = data.frame(read.csv(here("data", "hab.sta.csv")))
+dat_all = merge(dat_bird, dat_habitat)
+sum(dat_all$GRJA)
+```
+
+# Q9 Jay Presence/Absence
+
+110
+
+# Q10 Jay Presence/Absence R Code
+
+```{r}
+require(here)
+dat_bird = data.frame(read.csv(here("data", "bird.sta.csv")))
+dat_habitat = data.frame(read.csv(here("data", "hab.sta.csv")))
+dat_all = merge(dat_bird, dat_habitat)
+grja_present_absent = as.numeric(dat_all$GRJA > 0)
+sum(grja_present_absent)
+```
+
+
+
+

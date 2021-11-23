@@ -1,0 +1,67 @@
+---
+title: "code_chunk_demo"
+author: "Mandy Klehr"
+date: "10/20/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Tabset Example {.tabset} 
+Use the curly brace and .tabset to create a tabset. 
+
+## Tab 1
+
+Tab 1 contents, code chunks
+
+```{r load_penguin_data, eval=TRUE, echo=TRUE}
+
+require(palmerpenguins)
+head(penguins)
+
+```
+
+## Tab 2
+
+Tab 2 contents, simple pair plot with penguins data
+
+```{r simple_pairplot}
+plot(penguins[, 3:5])
+```
+
+## Tab 3 
+
+Tab 3 contents, hide code and change aspect of the simple pair plot
+
+```{r simple_pairplot_change aspect ratio, echo = FALSE, fig.asp=1/1.5, fig.width=4}
+
+plot(penguins[, 3:5])
+
+#aspect ratio is greater than one, get a tall plot. Aspect ratio is less than one it will be a wide plot. 
+```
+
+# Next section
+
+new code that is non-tabbed
+
+# Different Penguin Plots {.tabset .tabset-pills}
+
+The following tabs contain different plot types
+
+## Histogram
+
+```{r, fig.asp = 1/1.5}
+hist(penguins$flipper_length_mm)
+```
+
+
+## Another Histogram
+
+```{r, echo = FALSE}
+hist(penguins$bill_length_mm)
+```
+
+
+

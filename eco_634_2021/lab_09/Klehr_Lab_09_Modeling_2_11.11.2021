@@ -1,0 +1,149 @@
+---
+title: 'Lab 09: Modeling Data 2'
+author: "Mandy Klehr -- I worked with Jahiya, John, Matt, Heather, Erika, and Bonnie"
+date: "11/21/2021"
+output:  
+  html_document:
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+
+---
+
+# Q1
+
+*State the null hypothesis of the Chi-square test.*
+
+*Make sure you state the null hypothesis in terms of Brown Creeper presence/absence and edge/interior habitats.*
+
+```{r}
+
+birds = read.csv(here("data", "bird.sta.csv"))
+hab = read.csv(here("data", "hab.sta.csv"))
+birdhab = merge(birds, hab, by = c("basin", "sub", "sta"))
+
+br_creeper_table = table(birdhab$s.edge, birdhab$BRCR > 0)[, 2:1]
+br_creeper_table
+
+chisq.test(br_creeper_table)
+
+```
+
+# Q2
+
+*Consider the results of your test and explain whether you think that Brown Creepers show a significant habitat preference.*
+
+*Make sure your use the output of your statistical test to support your answer.*
+
+
+# Q3
+
+```{r}
+require(palmerpenguins)
+
+fit_species = 
+  lm(
+    formula = body_mass_g ~ species, 
+    data = penguins)
+```
+
+# Q4
+
+```{r}
+fit_sex = 
+  lm(
+    formula = body_mass_g ~ sex,
+    data = penguins)
+
+```
+
+# Q5
+
+```{r}
+fit_both = 
+  lm(
+    formula = body_mass_g ~ sex * species, 
+    data = penguins)
+```
+
+# Q6
+
+```{r}
+boxplot(body_mass_g ~ species, 
+    data = penguins, 
+    main = "Body mass of penguins \n by species",
+    ylab = "Body mass (g)",
+    xlab = '')
+```
+
+# Q7 
+
+```{r}
+boxplot(body_mass_g ~ sex, 
+    data = penguins, 
+    main = "Body mass of penguins \n by sex",
+    ylab = "Body mass (g)",
+    xlab = '')
+```
+
+
+# Q8
+
+```{r}
+bxplt = boxplot(body_mass_g ~ sex * species,
+                data = penguins,
+                plot = FALSE)
+
+
+boxplot(body_mass_g ~ sex * species, 
+    data = penguins, 
+    main = "Body mass of penguins \n by sex and species",
+    ylab = "Body mass (g)",
+    names = gsub("\\.", "\n", bxplt$names),
+    las = 2,
+    xlab = '')
+
+```
+
+
+# Q9 
+
+*Based on the shapes of the boxes, which of the models (if any) do you think may have problems fulfilling the heterogeneity assumption?*
+
+Comfortable with except with the body mass and species? visual interpretation should be confirmed with a statistic test; heterogeneity assumption not fulfilled in species (adelie vs. chinstrap?)
+
+# Q10 
+
+*State the null hypothesis of the Bartlett test.*
+
+# Q11
+
+0.0500
+
+```{r}
+bartlett.test(body_mass_g ~ species, data = penguins)
+```
+
+# Q12
+
+0.0319
+
+```{r}
+bartlett.test(body_mass_g ~ sex, data = penguins)
+```
+
+# Q13
+
+```{r}
+
+dat_bm_sex = aggregate(
+  body_mass_g ~ sex * species, 
+  data = penguins,
+  FUN = c)
+
+bartlett.test(dat_bm_sex$body_mass_g)
+```
+
+# Q14
+
+*Based on the results of the Bartlett tests, do you anticipate any issues with heterogeneity in any of the models? Make sure you justify your response with the results of your tests.*

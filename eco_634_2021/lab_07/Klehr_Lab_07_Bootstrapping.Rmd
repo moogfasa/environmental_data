@@ -1,0 +1,194 @@
+---
+title: "Lab 07: Bootstrapping"
+author: "Mandy Klehr --- I worked with Matt, Heather, John, and Bonnie and also through the office hours with Mike on 10/28"
+date: "10/31/2021"
+output:
+  html_document:
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+---
+
+# Q1
+
+123
+
+```{r bootstrap and parametric confidence interval}
+#clear environment
+rm(list = ls())
+
+#load penguins data
+require(palmerpenguins)
+
+#create a dataframe with just Gentoo data
+dat_gentoo = subset(penguins, species == "Gentoo")
+
+# calculate the sample size in the bill_length_mm                    
+gentoo_sample = sum(!is.na(dat_gentoo$bill_length_mm))
+gentoo_sample
+
+```
+
+# Q2
+
+3.081857
+
+```{r}
+
+gentoo_sd = sd(dat_gentoo$bill_length_mm, na.rm = TRUE)
+gentoo_sd
+
+```
+
+# Q3
+
+1.9796
+-1.9796
+
+```{r}
+t_crit = qt(c(0.025, 0.975), df = gentoo_sample - 1)
+t_crit
+
+```
+
+# Q4
+
+0.2778817
+
+```{r}
+sse_mean = function(x)
+{
+  sse = sd(x, na.rm = TRUE) / sqrt(length(na.omit(x)))
+  return(sse)
+}        
+
+gentoo_sse = sse_mean(dat_gentoo$bill_length_mm)
+gentoo_sse
+
+```
+
+# Q5
+
+46.95478 to 48.05497
+
+```{r}
+gentoo_mean = mean(dat_gentoo$bill_length_mm, na.rm = TRUE)
+gentoo_mean
+
+ci_gentoo = c(gentoo_mean + gentoo_sse*t_crit)
+ci_gentoo
+
+```
+
+# Q6
+
+46.97458 to 48.06614
+
+
+# Q7
+
+```{r}
+require(boot)
+#Bootstrap basic syntax
+#boot(data, statistic, R)
+m = 10000
+
+boot_mean = function(x, i)
+{
+  return(mean(x[i], na.rm = TRUE))
+}
+
+myboot = boot(data = dat_gentoo$bill_length_mm, statistic = boot_mean, R = m)
+myboot
+
+```
+
+# Q8
+
+
+```{r, results = FALSE}
+quantile(myboot$t, c(0.025, 0.975))
+```
+
+
+# Q9
+
+```{r}
+require(here)
+moths = read.csv(here("data", "moths.csv"))
+
+rarefaction_sampler = function(input_dat, n_iterations)
+{
+  n_input_rows = nrow(input_dat)
+  
+  results_out = matrix(
+    nrow = n_iterations,
+    ncol = n_input_rows) 
+  
+  
+  for(i in 1:n_iterations)
+  {
+    
+    for(j in 1:n_input_rows)
+    {
+      rows_j = sample(n_input_rows, size = j, replace = TRUE)
+      
+      t1 = input_dat[rows_j, ]
+      
+      t2 = apply(t1, 2, sum)
+      
+      results_out[i, j] = sum(t2>0)
+    }  
+  }
+  
+  return(results_out)
+}
+```
+
+# Q10
+
+There is a lot of code within the function and it was difficult to know where to find data that was not defined, e.g., "n". I also found it difficult to understand what exactly we wanted to define as "n", and why it would be the rows of the data frame. It wasn't until talking through it with my peers that I more fully understood why the sample size would be nrow of the input data frame, and to realize that the draft in the walk through already had a the "n" we wanted, it was just "n_input_rows".    
+
+# Q11
+
+```{r}
+rarefact = rarefaction_sampler(moths[,-1], 10000)
+
+rare_mean = apply(rarefact, 2, mean)
+rare_quant = apply(rarefact, 2, quantile, probs=c(0.025, 0.975))
+rare = t(rbind(rare_mean, rare_quant))
+
+
+```
+
+# Q12
+
+I tried to figure out how to change the background color, but I do not understand how the *rect()* and *par()* commands work. I included the script I was playing around with in the below R script for my figure.  
+```{r fig.height=7, fig.width=11}
+
+matplot(
+  rare, 
+  type="l",
+  xlab = "Number of sampling plots",
+  ylab = "Species richness",
+  main = "Rarefaction Curve of Rare Moth Abundance \n 95% Confidence Interval (CI)", 
+  cex.main = 1.0, cex.lab = 1.0, lw = 1.75)
+
+#root script for changing background color
+#>rect(xleft, ybottom, xright, ytop, col = NA, border = NULL)
+
+#rect(par("usr")[1], par("usr")[2],
+#     par("usr")[20], par("usr")[10],
+#     col = "#f7f7f7")
+
+
+legend(
+  "bottomright",
+  legend = c("lower CI (2.5%)", "mean", "upper CI (97.5%)"),
+  lty = c(2,1,3), col = c(2,1,3), inset=c(.1,.1), bg = "beige")
+```
+
+
+# Q13
+
+To see all moth species, we would need to visit more than 20 sampling plots. The rarefaction curve shows that there are a total of 10 rare moths. As the curve of the mean increases with number of sampling plots, the 95% CI gets smaller. Therefore, the spot at where the curve of the mean and the lines that represent the critical t-values meet, is where we may be certain that we will see all rare moth species, which is just over 20 sampling plots.  
