@@ -1,6 +1,6 @@
 ---
 title: 'In-Class Assignment: Using Models 2'
-author: "Mandy Klehr -- I worked with John, Matt, and Bonnie"
+author: "Mandy Klehr -- I did not work with any other students"
 date: "11/28/2021"
 output:  
   html_document:
@@ -9,7 +9,7 @@ output:
     toc_float: yes
 ---
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, results = FALSE, fig.show = 'hide', message= FALSE, warning = FALSE}
 require(palmerpenguins)
 t.test(subset(penguins, species == "Gentoo")$flipper_length_mm)
 
@@ -25,7 +25,27 @@ dat_gentoo = subset(penguins, species == "Gentoo")
 
 t.test(dat_adelie$flipper_length_mm, dat_gentoo$flipper_length_mm, alternative = "less")
 
+par(mfrow = c(1, 2))
+hist(penguins$body_mass_g, breaks = 80, main = "histogram of body mass", xlab = "body mass (g)")
+plot(density(penguins$body_mass_g, na.rm = TRUE), main = "density plot of body mass")
 
+boxplot(body_mass_g ~ species, data = penguins)
+
+dat_chinstrap = subset(penguins, species == "Chinstrap")
+mean(dat_chinstrap$body_mass_g, na.rm = TRUE)
+
+shapiro.test(dat_chinstrap$body_mass_g)
+
+aggregate(body_mass_g ~ species, data = penguins, FUN = mean)
+
+aggregate(
+  body_mass_g ~ species,
+  data = penguins,
+  FUN = function(x) shapiro.test(x)$p.value)
+
+fit_species = lm(body_mass_g ~ species, data = penguins)
+summary(fit_species)
+anova(fit_species)
 ```
 
 
@@ -48,20 +68,17 @@ boxplot(body_mass_g ~ sex * species,
     names = gsub("\\.", "\n", bxplt$names),
     las = 2,
     xlab = '')
+
 ```
 
 # Q2
 
-*Based on the boxplots, do you think male penguins (of any species) are significantly heavier than female penguins? Explain your reasoning.*
-
-Based on the boxplots it appears that male penguins are significantly heavier than female penguins as the 
+Based on the boxplots it appears that male penguins are significantly heavier than female penguins because even though the outer extreme ranges (the "whiskers") do overlap from female to male for each of the three species, the boxes themselves do not overlap. This is especially prevalent with the Gentoo penguins where we see a wider "gap" between the boxes for females and males and the upper extreme for female Gentoo penguins does not even overlap the lower quartile of the male Gentoo penguins box. Whereas for Chinstrap penguins, the males appear to generally be heavier than the females; however, it looks like the upper quartile for females is close to the same value of body mass as the lower quartile for males. Therefore, Chinstrap males are heavier than females, but may not be *significantly* heavier than Chinstrap females and statistical tests would need to be completed to verify that.  
 
 
 # Q3
 
-*Do you think adding sex to a model that already includes species will improve the model fit?*
-
-*Make sure you justify your answer based on the boxplots and not results of a statistical test.*
+I think in the case of the data for these three penguin species adding sex to the model, e.g., the boxplot, that already includes species improves the visual representation of the model fit. This boxplot specifically illustrates that there may be a difference in the body mass between males and females of these three penguin species. Which indicates that all three species of penguins exhibit sexual dimorphism where males are larger than females. But as mentioned previously, this is just a visual representation and additional statistical analyses would need to be completed to understand if those differences are significantly different, or if there are any other errors in the data due to sample size or if there are assumption violations in our model fit. 
 
 
 # Q4
@@ -80,7 +97,7 @@ Female Adelie penguins is the base case for the two-way model that includes sex 
 
 # Q6
 
-The two coefficients that we would need to calculate the average mass of female Chinstrap penguins are (Intercept) and speciesChinstrap. 
+The two coefficients that we would need to calculate the average mass of female Chinstrap penguins are *(Intercept)* and *speciesChinstrap*. 
 
 
 # Q7

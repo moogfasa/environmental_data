@@ -29,11 +29,10 @@ ss_tot = mean(rope$p.cut)
 #we lose one degree of freedom because we estimate a grand mean
 df_tot = n_obs - 1
 
-#issues with the below agg_sq_resids code to be worked out 
 agg_sq_resids = aggregate(
   x = rope$p.cut, 
   by = list(rope$rope.type),
-  FUN = fuction(x) sum((x - mean(x)^2)))
+  FUN = function(x) sum((x - mean(x)^2)))
   
 ss_within = sum(agg_sq_resids$x)
   #sum agg_sq_resids$x....
