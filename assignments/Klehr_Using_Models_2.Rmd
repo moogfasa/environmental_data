@@ -85,7 +85,7 @@ The two coefficients that we would need to calculate the average mass of female 
 
 # Q7
 
-If it is calculated as 3368.84 (the intercept coefficient) plus 158.37 (the speciesChinstrap coefficient), then the average mass of female Chinstrap penguins is 3527.21 g. 
+If it is calculated as 3368.84 (the intercept coefficient) plus 158.37 (the speciesChinstrap coefficient), then the average mass of female Chinstrap penguins based on the coefficient table is 3527.21 g. It seems that  the next coefficients are "speciesChinstrap" and "speciesGentoo" do not have a clear indication that these are also females or males, but because the last two coefficients in the tab do clearly indicate species and the sex as male, I assume that "speciesChinstrap" is the dummy variable for only females of this species.  
 
 
 # Q8

@@ -13,4 +13,8 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Welcome to Mandy's class page!
+Welcome to my class page!
+
+Below is a picture I took this summer of red milkweed beetles (*Tetraopes tetrophtalmus*) on a common milkweed (*Asclepias syriaca*) at one of my PV solar sites. 
+
+![red milkweed beetles](images/milkweed_beetles.jpg) 
