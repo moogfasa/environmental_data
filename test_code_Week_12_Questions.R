@@ -21,3 +21,15 @@ summary(fit_flipper)
 ?bartlett.test
 ??FUN
 ?aggregate
+
+
+dat_sum = c(55, 62, 45, 31, 50, 57, 54)
+dat_mean = mean(dat_sum)
+print(dat_mean)
+dat_sd = sd(dat_sum)
+
+sum((dat_mean - dat_sum)^2 / (7 - 1))
+
+0.36714-0.10164
+
+#0.54688
