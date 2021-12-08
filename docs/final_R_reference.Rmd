@@ -1,0 +1,101 @@
+---
+title: 'Final Project: R Reference'
+author: "Mandy Klehr"
+date: "12/2/2021"
+output: html_document
+---
+
+# R Reference Guide {.tabset .tabset-pills}
+
+
+## Loading Data and Packages
+
+### here() 
+
+The function here() can be used to locate data files in your directory. 
+
+Both library() and require() can be used to load packages that are included or installed in R. Below I will show how to use library and require to load the *palmerpenguins* data. 
+
+```{r}
+library(palmerpenguins)
+
+require(palmerpenguins)
+
+```
+
+
+I can use here to load the 
+
+```{r}
+
+
+```
+
+
+Use these to show how to load the here and palmerpenguins packages - libary() and require()
+
+Ginkgo data: use the 2021 ginkgo data to create a data.frame called ginkgo using:
+
+here()
+read.csv()
+
+
+## Data Structures
+
+### c() 
+
+The function c() *combines* or *concatenates* its arguments into a vector (a 1-dimensional data structure consisting of 1 or more elements).
+
+* All of the elements must be of the same type.
+* I can’t combine character and numeric types in the same call to c()
+
+Here’s two examples using numeric and character data types:
+
+```{r}
+## Create a vector of numbers:
+num_vec  = c(1, 4, 8, 9, 13)
+
+## Create a vector of characters:
+char_vec = c("a", "fish", "data is cool")
+
+```
+
+
+I can show the contents of a vector by typing the name of the vector, or using the print() function.
+
+```{r}
+## Typing the name of the vector into the console prints the contents
+num_vec
+
+## The print() function accomplishes the same task:
+print(char_vec)
+
+```
+
+### length()
+
+Factor a vecotr or a list. 
+
+Using the example from the *c()* function we can figure out the length of the char_vec list: 
+```{r}
+## Use length to see how many ?items? are in the char_vec list:
+
+length(char_vec)
+
+```
+
+
+
+## Subsetting
+
+
+
+
+## Numerical Data Exploration
+
+
+## Graphical Data Exploration
+
+
+## Distribution Functions
+

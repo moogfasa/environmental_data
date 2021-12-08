@@ -1,0 +1,549 @@
+---
+title: 'Lab 11: Simulation and Power Analysis'
+author: "Mandy Klehr -- I worked with Matt, John, Heather, Jahiya, and Bonnie"
+date: "12/5/2021"
+output:  
+  html_document:
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+---
+
+```{r walkthough setting up bird and habitat dataframe, message = FALSE}
+
+require(here)
+
+dat_bird = read.csv(here("data", "bird.sub.csv"))
+dat_hab = read.csv(here("data", "hab.sub.csv"))
+birdhab = merge(dat_bird, dat_hab)
+
+dim(birdhab)
+
+```
+
+```{r walkthrough fit linear model to observed data, echo=FALSE, results = FALSE, message = FALSE, warning = FALSE, fig.show = 'hide'}
+
+
+fit_1 = lm(BRCR ~ ls, data = birdhab)
+
+plot(x = birdhab$ls, y = birdhab$BRCR)
+abline(fit_1)
+
+summary(fit_1)
+
+```
+
+```{r walkthrough create linear function and linear simulator, echo=FALSE, results = FALSE, message = FALSE, warning = FALSE, fig.show = 'hide'}
+
+linear = function(x, y_int, slope)
+  {
+    y_int + slope * x
+  }
+
+#test implementation of linear function
+
+linear(x = 1, y_int = 1, slope = 1)
+linear(x = 3:5, y_int = 1, slope = 1)
+linear(x = 3:5, y_int = -1, slope = 1)
+linear(x = 3:5, y_int = -1, slope = 0.01)
+
+linear_simulator = function(x, y_int, slope, st_dev)
+  {
+  linear(x, y_int, slope) + rnorm(length(x), mean = 0, sd = st_dev)
+  }
+
+n = 200
+
+par(mfrow = c(2, 2))
+for (i in 1:4)
+{
+  x = runif(n = n)
+  plot(
+    x,
+    linear_simulator(x, y_int = 1, slope = 4.5, st_dev = 0.1),
+    main = "", xlab = "x", ylab = "y",
+    pch = 16, col = rgb(0, 0.2, 0, 0.2))
+}
+
+n = 400
+
+par(mfrow = c(2, 2))
+for (i in 1:4)
+{
+  x = runif(n = n)
+  plot(
+    x, linear_simulator(x, y_int = 10, slope = -6.5, st_dev = 1.1),
+    main = "", xlab = "x", ylab = "y",
+    pch = 16, col = rgb(0, 0.2, 0, 0.2))
+}
+
+```
+```{r walkthrough use observed data to simulate data, echo=FALSE, results = FALSE, message = FALSE, warning = FALSE, fig.show = 'hide'}
+
+#coefficients to extract intercept and slope values
+
+fit_1_coefs = coefficients(fit_1)
+str(fit_1_coefs)
+
+#extract sd using summary and sigma
+
+fit_1_summary = summary(fit_1)
+str(fit_1_summary)
+fit_1_summary$sigma
+
+#store the intercept, slope, and sd from model into variables
+
+int_obs = 0.0991
+slope_obs = 0.00584
+sd_obs = fit_1_summary$sigma
+
+#plot the observed and simulated data
+
+plot(
+  x = birdhab$ls, 
+  y = linear_simulator(
+    x = birdhab$ls,
+    y_int = int_obs,
+    slope = slope_obs,
+    st_dev = sd_obs
+  ),
+  main = "Simulated Data",
+  xlab = "late-successional forest",
+  ylab = "Brown Creeper Abundance")
+
+```
+
+
+```{r walkthrough plot observed and simulated data, echo=FALSE, results = FALSE, message = FALSE, warning = FALSE, fig.show = 'hide'}
+#alternatively, plot observed first and ADD simulated data
+
+plot(
+  birdhab$ls, birdhab$BRCR, 
+  xlab = "late-successional forest extent",
+  ylab = "Brown Creeper abundance",
+  pch = 19)
+
+points(
+  x = birdhab$ls, 
+  y = linear_simulator(
+    x = birdhab$ls,
+    y_int = int_obs,
+    slope = slope_obs,
+    st_dev = sd_obs
+  ),
+  col = adjustcolor("red", alpha = 0.3),
+  pch = 16)
+
+legend(
+  "topleft",
+  legend = c("data", "simulation"),
+  pch = 16,
+  col = c(1, adjustcolor("red", alpha = 0.3)))
+```
+
+```{r walkthrough power analysis for linear regression model, echo=FALSE, results = FALSE, message = FALSE, warning = FALSE, fig.show = 'hide'}
+
+y_sim = linear_simulator(
+  x = birdhab$ls,
+  y_int = int_obs,
+  slope = slope_obs,
+  st_dev = sd_obs
+)
+
+fit_sim = lm(y_sim ~ birdhab$ls)
+summary(fit_sim)
+
+sum_1 = summary(fit_sim)
+sum_1$coefficients
+
+
+#figure out the power
+
+n_sims = 1000
+p_vals = numeric(n_sims)
+alpha = 0.05
+for(i in 1:n_sims)
+{
+  y_sim = linear_simulator(
+    x = birdhab$ls,
+    y_int = int_obs,
+    slope = slope_obs,
+    st_dev = sd_obs
+  )
+  fit_sim = lm(y_sim ~ birdhab$ls)
+  
+  p_vals[i] = summary(fit_sim)$coefficients[2, 'Pr(>|t|)']
+}
+sum(p_vals < alpha) / n_sims
+
+
+#function for linear simulation fits
+
+linear_sim_fit = function(x, slope, y_int, st_dev)
+{
+  y_sim = linear_simulator(
+    x = x,
+    y_int = y_int,
+    slope = slope,
+    st_dev = st_dev
+  )
+  fit_sim = lm(y_sim ~ x)
+  return(fit_sim)
+}
+
+#elaboration of the above code
+
+alpha = 0.05
+n_sims = 1000
+p_vals = numeric(n_sims)
+
+n_effect_sizes = 20
+effect_sizes_1 = seq(-.01, .01, length.out = n_effect_sizes)
+
+effect_size_powers = numeric(n_effect_sizes)
+
+for(j in 1:n_effect_sizes)
+{
+  for(i in 1:n_sims)
+  {
+    fit_sim = linear_sim_fit(
+      x = birdhab$ls,
+      y_int = int_obs,
+      slope = effect_sizes_1[j],
+      st_dev = sd_obs
+    )
+    
+    p_vals[i] = summary(fit_sim)$coefficients[2, 'Pr(>|t|)']
+  }
+  effect_size_powers[j] = sum(p_vals < alpha) / n_sims
+}
+
+sim_effect_size = 
+  data.frame(
+    power       = effect_size_powers,
+    effect_size = effect_sizes_1)
+
+#plot our simulation
+
+plot(
+  power ~ effect_size, data = sim_effect_size,
+  type = 'l', xlab = 'Effect size', ylab = 'Power')
+abline(v = slope_obs, lty = 2, col = 'red')
+
+
+#do the same thing for a gradient of sample sizes
+
+alpha = 0.05
+n_sims = 1000
+p_vals = numeric(n_sims)
+
+sample_sizes = seq(5, 100)
+sample_size_powers = numeric(length(sample_sizes))
+
+for(j in 1:length(sample_sizes))
+{
+  x_vals = seq(0, 100, length.out = sample_sizes[j])
+  
+  for(i in 1:n_sims)
+  {
+    fit_sim = linear_sim_fit(
+      x = x_vals,
+      y_int = int_obs,
+      slope = slope_obs,
+      st_dev = sd_obs
+    )
+    p_vals[i] = summary(fit_sim)$coefficients[2, 'Pr(>|t|)']
+  }
+  sample_size_powers[j] = sum(p_vals < alpha) / n_sims
+}
+
+sim_sample_size = 
+  data.frame(
+    power       = sample_size_powers,
+    sample_size = sample_sizes)
+
+plot(
+  power ~ sample_size, data = sim_sample_size,
+  type = 'l', xlab = 'Sample size', ylab = 'Power')
+abline(v = nrow(birdhab), lty = 2, col = 'red')
+
+```
+
+```{r walkthrough power heat map bivariate power analysis, echo=FALSE, results = FALSE, message = FALSE, warning = FALSE, fig.show = 'hide'}
+
+alpha = 0.01
+n_sims = 50
+
+p_vals = numeric(n_sims)
+
+n_effect_sizes = 20
+effect_sizes = seq(-.01, .01, length.out = n_effect_sizes)
+
+sample_sizes = seq(10, 50)
+
+sim_output_2 = matrix(nrow = length(effect_sizes), ncol = length(sample_sizes))
+
+for(k in 1:length(effect_sizes))
+{
+  effect_size = effect_sizes[k]
+  for(j in 1:length(sample_sizes))
+  {
+    x_vals = seq(0, 100, length.out = sample_sizes[j])
+    
+    for(i in 1:n_sims)
+    {
+      fit_sim = linear_sim_fit(
+        x = x_vals,
+        y_int = int_obs,
+        slope = effect_size,
+        st_dev = sd_obs
+      )
+      p_vals[i] = summary(fit_sim)$coefficients[2, 'Pr(>|t|)']
+    }
+    sim_output_2[k, j] = sum(p_vals < alpha) / n_sims
+  }
+  print(paste0("computing effect size ", k," of ", length(effect_sizes)))
+}
+
+sim_n_effect_size = 
+  list(
+    power = sim_output_2,
+    effect_size = effect_sizes,
+    sample_size = sample_sizes
+  )
+
+image(
+  sim_n_effect_size$power,
+  xlab = "Effect size",
+  ylab = "Sample Size",
+  axes = FALSE)
+
+# add x-axis labels
+axis(
+  1, 
+  at = c(0, 0.5, 1), 
+  labels = c(-.01, 0.0, .01))
+
+# add y=axis labels
+axis(
+  2, 
+  at = c(0, 1), 
+  labels = c(sample_sizes[1], tail(sample_sizes, 1)))
+```
+
+```{r contour plot, echo=FALSE, results = FALSE, message = FALSE, warning = FALSE, fig.show = 'hide'}
+contour(
+  x = sim_n_effect_size$effect_size,
+  y = sim_n_effect_size$sample_size,
+  z = sim_n_effect_size$power,
+  xlab = "effect size",
+  ylab = "sample size",
+  main = "Contour Plot of Statistical Power",
+  levels = seq(0, 1, length.out = 9),
+  drawlabels = TRUE,
+  # method = "simple")
+  method = "edge")
+```
+```{r walkthrough perspective plot and 3d plots, echo=FALSE, fig.show= 'hide', message=FALSE, warning=FALSE, results=FALSE}
+
+persp(
+  x = sim_n_effect_size$effect_size,
+  y = sim_n_effect_size$sample_size,
+  z = sim_n_effect_size$power,
+  xlab = "beta", ylab = "n", zlab = "power",
+  col = 'lightblue',
+  theta = 30, phi = 30, expand = .75,
+  ticktype = 'detailed')
+
+
+require(rgl)
+
+#persp3d(
+#  x = sim_n_effect_size$effect_size,
+#  y = sim_n_effect_size$sample_size,
+#  z = sim_n_effect_size$power,
+#  xlab = "beta", ylab = "n", zlab = "power",
+#  col = 'lightblue',
+#  theta = 30, phi = 30, expand = .75,
+#  ticktype = 'detailed')
+
+#require(htmlwidgets)
+
+#saveWidget(
+#  rglwidget(),
+#  file = here(
+#    "docs", "webGL",
+#    "n_effect_size_power_sim_plot.html"),
+#  selfcontained = TRUE
+#)
+
+
+#save data to file when running large simulations
+
+#save(
+#  sim_n_effect_size,
+#  file = here::here("data", "lab_11_n_effect_sizes.Rdata"))
+
+
+#load data once it has been saves
+
+#load(file = here::here("data", "lab_11_n_effect_sizes.Rdata")))
+
+
+```
+
+# Dispersion Simulation
+
+*Create a line plot of dispersion (x-axis) and statistical power (y-axis) with a dotted vertical red line at the observed population standard deviation value.*
+
+```{r }
+alpha = 0.05
+n_sims = 100
+p_vals = numeric(n_sims)
+
+# What was the observed standard deviation?
+sd_obs
+
+# specify the number of different standard deviation values to simulate:
+n_sds = 20
+pop_sds = seq(from = 0.01, to = 1.5, length.out = n_sds)
+
+pop_sd_power = numeric(n_sds)
+
+for(j in 1:length(pop_sds))
+{
+  pop_sd_j = pop_sds[j]
+  for(i in 1:n_sims)
+  {
+    fit_sim = linear_sim_fit(x = birdhab$ls,
+      y_int = int_obs,
+      slope = slope_obs,
+      st_dev = pop_sd_j)
+    p_vals[i] = summary(fit_sim)$coefficients[2, 'Pr(>|t|)']
+  }
+  pop_sd_power[j] = sum(p_vals < alpha) / n_sims
+}
+
+sim_output_dispersion = data.frame(
+  sd = pop_sds,
+  power = pop_sd_power)
+
+# You should save your simulation results so you don't have to run it every time.
+save(
+  sim_output_dispersion, 
+  file = here("data", "lab_ll_dat_dispersion_sim.RData"))
+
+load(file = here("data", "lab_ll_dat_dispersion_sim.RData"))
+
+```
+
+
+## Q1
+
+*Include a figure of your line plot in your report.*
+
+```{r}
+# Line plot of standard deviation (x-axis) and statistical power (y-axis)
+plot(sim_output_dispersion,
+  type = 'l', xlab = 'Standard deviation', ylab = 'Power')
+
+
+# Add a dotted vertical red line at the observed population standard deviation value.
+abline(v = sd_obs, lty = 2, col = 'red')
+
+```
+
+
+# Q2
+
+*Why do you think that statistical power decreases as population dispersion increases?*
+
+
+
+*Create a contour plot of the sample size and population dispersion power simulation.*
+
+
+```{r}
+alpha = 0.05
+
+# Start with a small number
+n_sims = 10
+p_vals = numeric(n_sims) 
+
+# What was the observed standard deviation?
+sd_obs
+
+# specify the number of different standard deviation values to simulate:
+# Start with a small number
+n_sds = 20
+pop_sds = seq(from = 0.05, to = 2.0, length.out = n_sds)
+
+pop_sd_power = numeric(n_sds)
+
+sample_sizes = seq(5, 100)
+
+sim_output_3 = matrix(nrow = length(pop_sds), ncol = length(sample_sizes))
+
+for(k in 1:length(pop_sds))
+{
+  pop_sd_k = pop_sds[k]
+  
+  for(j in 1:length(sample_sizes))
+  {
+    x_vals = seq(0, 100, length.out = sample_sizes[j])
+    
+    for(i in 1:n_sims)
+    {
+      fit_sim = linear_sim_fit(
+        x = x_vals, 
+        y = int_obs, 
+        slope = slope_obs, 
+        st_dev = pop_sd_k)
+      p_vals[i] = summary(fit_sim)$coefficients[2, 'Pr(>|t|)']
+    }
+    
+    sim_output_3[k, j] = sum(p_vals < alpha) / n_sims
+  }
+  print(paste0("Testing standard deviation ", k, " of ", n_sds))
+}
+
+image(sim_output_3)
+
+sim_3_dat = 
+  list(
+    power       = sim_output_3,
+    sample_size = sample_sizes,
+    pop_sd      = pop_sds)
+
+
+# You should save your simulation results so you don't have to run it every time.
+save(
+  sim_3_dat, 
+  file = here::here("data", "lab_ll_sim_output_dispersion_n_1000.RData"))
+```
+
+
+# Q3
+
+*Include a figure of your contour plot in your report.*
+
+```{r}
+contour(
+  x = sim_3_dat$pop_sd, y = sim_3_dat$sample_size, z = sim_3_dat$power,
+  xlab = "standard deviation",
+  ylab = "sample size",
+  main = "Contour Plot of Statistical Power", 
+  levels = seq(0, 1, length.out = 9),
+  drawables = TRUE, 
+  method = "edge")
+```
+
+
+# Q4
+
+*Qualitatively describe the patterns you see in the contour plot. Make sure you discuss the effects of sample size and population dispersion on statistical power.*
+
+
+# Q5
+
+

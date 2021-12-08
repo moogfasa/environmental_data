@@ -18,3 +18,5 @@ Welcome to my class page!
 Below is a picture I took this summer of red milkweed beetles (*Tetraopes tetrophtalmus*) on a common milkweed (*Asclepias syriaca*) at one of my PV solar sites. 
 
 ![red milkweed beetles](images/milkweed_beetles.jpg) 
+
+[Final Project: R Reference Guide](final_R_reference.html)

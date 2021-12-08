@@ -1,0 +1,370 @@
+---
+title: 'FInal Project: Data Analysis'
+author: "Mandy Klehr -- I worked with Matt, Bonnie, and John"
+date: "12/16/2021"
+output:  
+  html_document:
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+---
+
+# Data Exploration {.tabset .tabset-pills}
+
+## Numerical Exploration
+
+```{r}
+require(here)
+
+delomys = read.csv(here("data", "delomys.csv"))
+
+summary(delomys$body_mass)
+summary(delomys$body_length)
+
+shapiro.test(delomys$body_mass)
+shapiro.test(delomys$body_length)
+
+
+```
+## Graphical Exploration
+
+Scatterplot of body mass and body length 
+
+```{r, fig.height = 9, fig.width = 10}
+plot(body_mass ~ body_length, data = delomys,
+     main = "Scatterplot of Delomys\n Body Mass and Length",
+     xlab = "Body length (mm)",
+     ylab = "Body mass (g)")
+```
+
+Histogram of body mass
+
+```{r}
+
+hist(delomys$body_mass,
+     main = "Histogram of Delomys body mass",
+     xlab = "Body mass (g)")
+
+```
+
+Histogram of body length
+
+```{r}
+hist(delomys$body_length,
+     main = "Histogram of Delomys body length",
+     xlab = "Body length (mm)")
+```
+
+Conditional boxplot of body mass, conditioned on species (column binomial)
+
+```{r}
+
+boxplot(body_mass ~ binomial, 
+    data = delomys, 
+    main = "Body mass of delomys by species",
+    ylab = "Body mass (g)", 
+    xlab = "Species")
+
+```
+
+Conditional boxplot of body mass, conditioned on sex (column sex)
+
+```{r}
+boxplot(body_mass ~ sex, 
+    data = delomys, 
+    main = "Body mass of delomys by sex",
+    ylab = "Body mass (g)", 
+    xlab = "Sex")
+
+```
+
+Conditional boxplot of body mass, conditioned on both species and sex
+
+```{r, fig.height = 6, fig.width = 10}
+
+bxplt = boxplot(body_mass ~ sex * binomial,
+                data = delomys,
+                plot = FALSE)
+
+boxplot(body_mass ~ sex * binomial, 
+    data = delomys, 
+    main = "Body mass of Delomys \n by sex and species",
+    ylab = "Body mass (g)",
+    names = gsub("\\.", "\n", bxplt$names),
+    las = 1,
+    xlab = '')
+```
+
+
+## Questions {.tabset .tabset-pills}
+
+### Q1
+
+*Qualitatively describe the relationship between body mass and length* 
+*Does the relationship seem linear, curved, nonexistent?*
+
+### Q2 
+
+*Qualitatively describe the shapes of the histograms.*
+*Do the data appear normally-distributed? Explain why or why not*
+
+### Q3 
+
+*Using both the histograms and normality tests, do you think the (unconditioned) body masses and body length are normally-distributed?*
+*Contrast your visual assessment of normality to the results of the numerical normality tests.*
+
+### Q4
+
+*Examine the conditional boxplots. Describe any graphical evidence you see for body mass differences based on species and/or sex.*
+
+
+# Model Building {.tabset .tabset-pills}
+
+Fitting 5 models with Delomys data
+
+```{r }
+
+# Model 1:  simple linear regression body_length ~ body_mass
+fit1 = lm(body_length ~ body_mass, data = delomys)
+
+# Model 2: 1-way ANOVA body_mass ~ sex
+fit2 = lm(body_mass ~ sex, data = delomys)
+anova_fit2 = anova(fit2)
+
+# Model 3: 1-way ANOVA body_mass ~ binomial
+fit3 = lm(body_mass ~ binomial, data = delomys)
+anova_fit3 = anova(fit3)
+
+# Model 4: 2-way additive ANOVA body_mass ~ sex + binomial
+fit4 = lm(body_mass ~ sex + binomial, data = delomys)
+anova_fit4 = anova(fit4)
+
+# Model 5: 2-way factorial ANOVA body_mass ~ sex * binomial
+fit5 = lm(body_mass ~ sex * binomial, data = delomys)
+anova_fit5 = anova(fit5)
+
+```
+
+## Model Diagnostics {.tabset .tabset-pills}
+
+Histograms of residuals for each model
+
+```{r}
+hist(residuals(fit1), 
+     main = "Histogram of \n Model 1 residuals", 
+     xlab = "Residuals")
+
+hist(residuals(fit2),
+     main = "Histogram of \n Model 2 residuals", 
+     xlab = "Residuals")
+
+hist(residuals(fit3),
+     main = "Histogram of \n Model 3 residuals", 
+     xlab = "Residuals")
+
+hist(residuals(fit4),
+     main = "Histogram of \n Model 4 residuals", 
+     xlab = "Residuals")
+
+hist(residuals(fit5),
+     main = "Histogram of \n Model 5 residuals", 
+     xlab = "Residuals")
+```
+
+Shapiro tests for each of the models
+
+```{r}
+shapiro.test(residuals(fit1))
+shapiro.test(residuals(fit2))
+shapiro.test(residuals(fit3))
+shapiro.test(residuals(fit4))
+shapiro.test(residuals(fit5))
+```
+
+
+### Questions 
+
+#### Q5 
+
+*What do you conclude about residual normality based on the numerical and graphical diagnostics?*
+
+#### Q6
+
+*Are violations of the normality assumption equally severe for all the models?*
+
+
+## Model Interpretation {.tabset .tabset-pills}
+
+### Questions 
+
+```{r, echo = FALSE}
+#Print the model coefficient table using summary():
+
+knitr::kable(coef(summary(fit1)))
+
+```
+
+
+#### Q7
+
+*What is the magnitude of the mass/length relationship?*
+
+0.88
+
+#### Q8
+
+*What is the expected body length of an an animal that weighs 100g?*
+
+```{r, echo = FALSE, results = FALSE}
+76.1246565 + (0.8754988 * 100) 
+```
+
+
+76.12 + (0.87 * 100) =  163.67 mm (if it is actually in those units)
+
+#### Q9
+
+*What is the expected body length of an animal that weighs 0g?*
+
+76.12
+
+
+**Coefficient Table for Model 2**
+
+```{r, echo = FALSE}
+
+knitr::kable(coef(summary(fit2)))
+
+```
+
+**Coefficient table Model 3**
+
+```{r, echo = FALSE}
+
+knitr::kable(coef(summary(fit3)))
+
+```
+
+
+**Coefficient table Model 4**
+
+```{r, echo = FALSE}
+
+knitr::kable(coef(summary(fit4)))
+
+```
+
+
+**Coefficient table Model 5**
+
+```{r, echo = FALSE}
+
+knitr::kable(coef(summary(fit5)))
+```
+
+
+#### Q10
+
+*What is the base level for sex?*
+
+Female
+
+#### Q11
+
+*What is the base level for binomial?*
+
+Delomys dorsalis
+
+#### Q12
+
+*Which sex is heavier?*
+
+Male
+
+#### Q13
+
+*Which species is heavier?*
+
+Delomys dorsalis
+
+
+
+ANOVA Tables for each of the body mass models.
+
+**ANOVA Model Fit 2**
+
+```{r, echo = FALSE}
+
+print(anova_fit2)
+
+```
+**ANOVA Model Fit 3**
+
+```{r, echo = FALSE}
+
+print(anova_fit3)
+
+```
+
+**ANOVA Model Fit 4**
+
+```{r}
+
+print(anova_fit4)
+
+```
+
+**ANOVA Model Fit 5**
+
+```{r}
+
+print(anova_fit5)
+
+```
+
+
+#### Q14
+
+*Are sex and species significant predictors for body mass?*
+
+Yes
+
+#### Q15
+
+*Is there a significant interaction?*
+
+There is not a significant interaction based on the p-value of the the ANOVA for model fit 5 which is 0.95. 
+
+#### Q16
+
+*How dos the significance (as measured by p-value) of either of the main effects (sex and species) differ between the single-predictor models, the additive model, and the interactive model?*
+
+The significance as measured by p-value slightly differs between sex as a predictor between , the species predictor between all of the models are 
+
+## Model Comparison: Body Mass {.tabset .tabset-pills}
+
+```{r}
+# Calculate the AIC values for each of the body mass models
+
+AIC(fit2)
+AIC(fit3)
+AIC(fit4)
+AIC(fit5)
+
+```
+
+
+### Questions
+
+#### Q17
+
+*Which two models have the lowest AIC?*
+
+Model Fit 4 and 5 have the lowest AIC values. 
+
+#### Q18
+
+*Which of the two models with lowest AIC scores would you select?*
+*Explain your decision based on model fit and the complexity/understanding tradeoff.*
+
+
