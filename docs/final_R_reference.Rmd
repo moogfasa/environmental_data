@@ -1,8 +1,11 @@
 ---
 title: 'Final Project: R Reference'
 author: "Mandy Klehr"
-date: "12/2/2021"
-output: html_document
+date: "12/16/2021"
+output:  
+  html_document:
+    theme: spacelab
+
 ---
 
 # R Reference Guide {.tabset .tabset-pills}
@@ -10,61 +13,68 @@ output: html_document
 
 ## Loading Data and Packages
 
-### here() 
+Once you have installed packages into R, you need to load them using one of two functions:
 
-The function here() can be used to locate data files in your directory. 
+1. library( )
+2. require( )
 
-Both library() and require() can be used to load packages that are included or installed in R. Below I will show how to use library and require to load the *palmerpenguins* data. 
+Below I will show how to use library and require to load the *palmerpenguins* data. 
 
 ```{r}
-library(palmerpenguins)
 
+library(palmerpenguins)
 require(palmerpenguins)
 
 ```
 
+Both of these accomplish the same thing and it is just a preference for which you wish to use. I prefer to use require( ). However, library( ) is useful to identify errors in your code, such as if the package you are trying to use is not yet installed, by giving an error on that line of your code. If you use require( ), you'll receive a warning and the program will continue to run, only to give an error later when you try to use the package that is not installed. This can be helpful and save time and headaches later on if you can easily identify the error early on instead of having to go through all of your code to find the issue.  
+\
 
-I can use here to load the 
+### here( ) 
+
+The function here( ) is designed to work with **RProjects** and will use your working directory to import data files. Here is not a base package in R and will initially need to be installed if not already. Once here( ) is installed we can load it using library or require as we did above with the *palmerpenguins* data. 
 
 ```{r}
-
+require(here)
 
 ```
 
+\
+Next, we want to use here( ) to locate and import the 2021 Ginkgo Data. This can be done using the read.csv( ) function with here( ). 
 
-Use these to show how to load the here and palmerpenguins packages - libary() and require()
+```{r, results = FALSE}
+## Locate and read the ginkgo data file saved in the working directory folder 
+read.csv(here("data", "ginkgo_data_2021.csv"))
 
-Ginkgo data: use the 2021 ginkgo data to create a data.frame called ginkgo using:
+```
 
-here()
-read.csv()
-
+\
 
 ## Data Structures
 
-### c() 
+### c( ) 
 
-The function c() *combines* or *concatenates* its arguments into a vector (a 1-dimensional data structure consisting of 1 or more elements).
+The function c( ) *combines* or *concatenates* its arguments into a vector (a 1-dimensional data structure consisting of 1 or more elements).
 
 * All of the elements must be of the same type.
-* I can’t combine character and numeric types in the same call to c()
+* I can’t combine character and numeric types in the same call to c( )
 
-Here’s two examples using numeric and character data types:
+Here are two examples using numeric and character data types:
 
 ```{r}
 ## Create a vector of numbers:
 num_vec  = c(1, 4, 8, 9, 13)
 
 ## Create a vector of characters:
-char_vec = c("a", "fish", "data is cool")
+char_vec = c("a", "fish", "data", "is", "cool")
 
 ```
 
 
-I can show the contents of a vector by typing the name of the vector, or using the print() function.
+I can show the contents of a vector by typing the name of the vector, or using the print( ) function.
 
 ```{r}
-## Typing the name of the vector into the console prints the contents
+## Typing the name of the vector into the console prints the contents:
 num_vec
 
 ## The print() function accomplishes the same task:
@@ -72,30 +82,460 @@ print(char_vec)
 
 ```
 
-### length()
+### matrix( ) and data.frame( )
 
-Factor a vecotr or a list. 
+The functions for matrix( ) and data.frame( ) can be used to store data and they have similar but different uses. 
 
-Using the example from the *c()* function we can figure out the length of the char_vec list: 
+#### matrix ( )
+
+We'll look at uses for matrix( ) first. Typically, it is for a homogeneous collection of data sets, e.g., all numbers or all characters, arranged in a matrix with a fixed number of rows and columns.
+
+In addition to the values we want to include in the matrix, there are also a few additional items we will need to consider in the function to create our matrix: 
+* nrow - for the number of rows in the matrix
+* ncol - for the number of columns in the matrix
+* byrow - to organize the matrix by columns or rows, the default is by column so if we want to organize by rows we will need to add *"byrow = TRUE"*
+
+
 ```{r}
-## Use length to see how many ?items? are in the char_vec list:
+## Create a matrix with 10 variables, 2 columns, and 5 rows that is organized by row: 
+matrix(c(1:10), nrow = 5, ncol = 2, byrow = TRUE)
 
-length(char_vec)
+## Create the same matrix, but organize it by columns. Note that because the default is columns, there is no argument for byrow: 
+matrix(c(1:10), nrow = 5, ncol = 2)
+
+```
+You'll notice that between the two, it will either distribute the values from 1-10 across the columns or across the rows when we use the *"byrow = TRUE"* argument. 
+
+#### data.frame( )
+
+Unlike matrix( ), data.frame( ) can be used to store data in tables and can contain both numerical and character data types. We can use it to create data frames or tables in R by hand or use read.csv( ) and here( ) to read and store csv files located in our working directory as data frames.  
+
+
+```{r}
+## Create a data frame with new vectors:
+
+student = c("Shaggy", "Scooby", "Velma", "Fred", "Daphne")
+grade_percent= c(70, 25, 100, 82, 91)
+grade_char = c("C-", "F", "A+", "B-", "A-")
+gpa = c(1.7, 0.0, 4.0, 2.7, 3.7)
+dat_gradebook = data.frame(student, grade_percent, grade_char, gpa)
+
+## Print dat_gradebook
+dat_gradebook
+
+## Create a data frame with the num_vec and char_vec:
+
+dat_num_char = data.frame(num_vec, char_vec)
+
+## Print dat_num_char
+dat_num_char
+
+## Create and save the ginkgo data in a data frame that is saved in the R environment with a unique name using read.csv( ) and here( ):
+
+dat_ginkgo = read.csv(here("data", "ginkgo_data_2021.csv"))
+
+##Note that dat_ginkgo is a vary large data frame so I did not print it in this code.  
 
 ```
 
 
 
+### length( )
+
+The length( ) function can be used to get or set the length of a vector or other objects (such as matrices and data frames). 
+
+Using the example from the c( ) function we can figure out the length of the *num_vec* and *char_vec* lists: 
+```{r}
+## Use length to identify how many numbers are in num_vec:
+
+length(num_vec)
+
+## Use length to identify how many chatacters are in char_vec:
+
+length(char_vec)
+
+```
+\
+
+
+### nrow( ) and ncol ( )
+
+Other than the use of setting the number of rows and columns in a matrix or data frame, we can use nrow( ) and ncol( ) to identify how many rows or columns are in our data frame. This is especially useful if the data frame is very large, or we need to use these values for analyses. 
+
+In the example below, I will use the ginkgo data frame:  
+
+```{r}
+nrow(dat_ginkgo)
+
+ncol(dat_ginkgo)
+```
+\
+
+Now we know in our *dat_ginkgo* data frame, we have 756 rows and 6 columns.
+
+### dim( )
+
+Additionally, we can use dim( ) to get or set the dimensions of a data frame or other object. This may be used instead of nrow( ) and ncol( ) to get the number of rows and columns in a data frame. 
+
+In the example below, I will use dim( ) to identify the dimensions of the ginkgo data frame: 
+
+```{r}
+dim(dat_ginkgo)
+```
+Like using nrow( ) and ncol( ), this gives us the number of rows (756) and number of columns (6). It is also a much simpler step, but as noted above, if we need to use these specific values for an analysis, we would use nrow( ) or ncol( ).
+
 ## Subsetting
 
+There are a number of ways we can subset data in a data frame. In general, there are three ways to subset data in R: 
 
+1. Using square brackets **[ ]** and double square brackets **[[ ]]** which can be used to select elements in lists and to select rows, columns, or specific elements in rows and columns in a data frame or matrix. 
+2. Using the dollar sign **$** to select elements or rows or columns that are named
+3. Using the **subset( )** function for conditional or logical subsets
+\
+
+### $
+
+First, we can use **$** to select data in a data frame if rows or columns are named. This example shows how to select the data in the *petiole_length* column in the ginkgo data frame:
+
+```{r}
+
+dat_ginkgo$petiole_length
+
+```
+\
+
+This returns all of the values for the petiole_length variable and is organized in a matrix-like table. 
+\
+
+### [ ]
+
+We can use square brackets **[ ]** to also do some subsetting. When using square brackets to subset a data frame, we want to identify the rows or columns we are selecting in a specific way; the row number will be first followed by a column and the column number ex. [5, 10].  
+
+This example subsets the ginkgo data frame by selecting the first row:
+
+```{r}
+## Select the first row of data in the data frame, note use of comma without a column value to select a single row and all of the column data included in that row:
+
+dat_ginkgo[1,]
+```
+
+\
+
+This is great way to look at all of the variables/values in each of the columns for this one row of data. But what if we wanted to select a specific element in a row and column? 
+
+We will use a similar syntax as we used to get one row of data but include a value for column to select a single element, as is shown in this example: 
+
+```{r}
+## Select an element in the second row and third column:
+
+dat_ginkgo[2, 3]
+
+```
+\
+
+Lastly, we can use square brackets to select a specific column, like we did for selecting a row: 
+
+```{r}
+## Select the third column, note that this time we have no value for row to select a single column: 
+
+dat_ginkgo[,3]
+
+```
+
+### subset( )
+
+The subset( ) function allows for conditional or logical subsetting for vector-like objects, matrices, and data frames.  
+
+In this example, I will use subset( ) to create a new dataframe of all of the Adelie penguin data from the palmerpenguins dataset. 
+
+```{r}
+## Create a dataframe with ALL of the palmerpenguins data:
+
+penguin_dat = data.frame(penguins)
+
+## Create new dataframe with ALL of the palmerpenguins data, note us of double equal signs to select single species column named Adelie:
+dat_adelie = subset(penguin_dat, species == "Adelie")
+
+## Print dat_adelie data frame:
+dat_adelie
+
+```
 
 
 ## Numerical Data Exploration
 
+You may use the ginkgo or Palmer penguin data to create examples of:
+
+### summary( )
+
+The function summary( ) can be used to produce various summary results, such as the mean and median, of numeric objects (vectors), including those in a data frame, or model fitting functions. 
+
+In the example below, I will show how this function works to summarize some data within the ginkgo data frame: 
+
+```{r}
+## Create a summary of the petiole.length column: 
+
+summary(dat_ginkgo$petiole_length)
+```
+
+
+### mean( )
+
+Similar to the summary( ) function, we can use the mean( ) function to identify the arithmetic mean value of a numeric objects in a data frame. It is important to know that if there are **NA** values in the data that we wish to calculate the mean for, we will need to use an argument in the function to remove those. If we do not, the function will return an **NA** as it will not be able to compute the mean with those data. The argument is **na.rm** which has a default of FALSE so it will need to be TRUE to remove NA values. 
+
+In the example below, I will use the same *petiole_length* of the ginkgo data frame to demonstrate this, both without na.rm and na.rm = TRUE. 
+
+```{r}
+## Calculate mean but do not change na.rm from default of FALSE:
+
+mean(dat_ginkgo$petiole_length)
+
+## Calculate mean and remove NA values with na.rm = TRUE:
+
+mean(dat_ginkgo$petiole_length, na.rm = TRUE)
+
+```
+
+
+So far so good, our mean value calculated above appears to be the same as the mean value obtained using the summary( ) function.
+
+### sd( )
+
+Lastly, we can calculate the standard deviation (sd) or the measure of the distribution of the variance of our data using the sd( ) function.
+
+Similar to the mean( ) function, we will need to remove **NA** values for R to compute the standard deviation. 
+
+```{r}
+sd(dat_ginkgo$petiole_length, na.rm = TRUE)
+```
+This is a fairly high sd and we could imagine that the spread of our values would be fairly wide if they were represented in a graph, which we will explore next (just not with petiole_length)! 
 
 ## Graphical Data Exploration
+
+### Scatterplot [plot( )]
+
+The function to create a scatterplot of data from a data frame (or otherwise) is plot( ). Plot ( ) has a couple of required arguments in order for data to be plotted. These include: 
+
+* x = the predictor variable plotted on the x-axis
+* y = the response variable plotted on the y-axis
+* xlim and ylim = not required but these can be adjusted if for some reason the data is plotted beyond the limits of the axes. it is usually plotted as a range, e.g. c(0,100)
+
+Plot( ) also has several arguments that can be changed to customize how the plotted data is presented. Some that we will explore include: 
+
+* col - change the color of plotted data, can be a number that is specific to a color or a name e.g. "blue" and default is black
+* pch - change the point symbol or shape, list of different numbered symbols is available online and default is hollow circle (pch=1)
+* cex - amount that plot text and symbols are scaled relative to a default of 1, can be applied to axis, labels, main title, and subtitles
+* main - add a main title to the plot, use "" with characters
+* xlab - add a label to the x-axis, use "" with characters
+* ylab - add a label to the y-axis, use "" with characters
+
+```{r fig.height=5, fig.width=7}
+## First: a simple scatterplot of the data:
+
+plot(x = dat_ginkgo$max_depth, y = dat_ginkgo$max_width)
+
+
+```
+```{r fig.height=6, fig.width=8}
+## Second: a customized scatterplot using the arguments described above: 
+
+plot(x = dat_ginkgo$max_depth, y = dat_ginkgo$max_width, 
+     main = "Ginkgo leaf depth and width",
+     xlab = "max leaf depth (mm)",
+     ylab = "max leaf width (mm)",
+     col = "dark gray",
+     pch = 2, 
+     xlim = c(0, 150), 
+     ylim = c(0, 150))
+```
+
+
+
+### Histogram [hist( )]
+
+hist() Create a histogram of penguin flipper lengths. 
+
+The function to create a histogram of data from a data frame (or otherwise) is hist( ). Unlike plot( ), hist ( ) does not have many required arguments to plot the data, actually it basically ONLY needs the data to be plotted. However, we can use one argument to customize the histogram and make it more interpretable: 
+
+* breaks - controls the number of bars, cells, or bins of the histogram, can be a number or various built in methods (e.g., Freedman-Diaconis)
+
+Additionally, like plot( ), we can customize the histogram by changing the color, adding labels, and changing other aspects as well. 
+
+```{r}
+## Create a simple histogram with no breaks:
+
+hist(penguins$flipper_length_mm)
+
+## Create a histogram and adjust the breaks and customization:
+
+hist(penguins$flipper_length_mm,
+     main = "Histogram of penguin flipper length",
+     xlab = "flipper length (mm)",
+     breaks = 25, 
+     col = "light blue")
+
+```
+
+
+### Boxplot [boxplot( )]
+
+We can create boxplots with boxplot( ). Similar to histograms, we really only need the data we want to plot for boxplots. However, we can also explore conditional boxplots by using the tilde (~) to condition a variable on another in our data. 
+
+In the below examples, we explore a boxplot with a single variable and a conditional box plot: 
+
+
+```{r fig.height=8, fig.width=8}
+## Create boxplot of a single variable:
+
+boxplot(dat_ginkgo$petiole_length,
+        main = "Boxplot of ginkgo petiole length",
+        ylab = "petiole length (mm)")
+
+## Create a conditional boxplot:
+boxplot(dat_ginkgo$max_depth ~ dat_ginkgo$seeds_present,
+        main = "Boxplot of ginkgo leaf \n max depth and seed presence",
+        ylab = "leaf max depth (mm)",
+        xlab = "seed presence")
+```
+
+
+### Paneled Figures [par( )]
+
+In addition to creating single figures, we can also combine graphs into a paneled figure by using par( ). Par( ) has a required argument: 
+
+* mfrow - used to determine the number of rows and columns that the graphs are distributed across, e.g. c(1, 3)
+
+To create the paneled figure, we also need to make sure that par( ) is included in the R code prior to creating the histograms. 
+
+Below, I will show an example of this by creating four histograms with the Adelie penguins dataset previously created:
+
+```{r fig.height=8, fig.width=8}
+par(mfrow = c(2, 2))
+
+hist(dat_adelie$bill_length_mm,
+     main = "Histogram of Adelie penguin bill length",
+     xlab = "bill length (mm)", col = "lightcyan3", 
+     cex.main = 0.85)
+
+hist(dat_adelie$bill_depth_mm,
+     main = "Histogram of Adelie penguin bill length",
+     xlab = "bill depth (mm)", col = "lightcyan4",
+     cex.main = 0.85)
+
+hist(dat_adelie$flipper_length_mm,
+     main = "Histogram of Adelie penguin flipper length",
+     xlab = "flipper length (mm)", col = "darkslategray3",
+     cex.main = 0.85)
+
+hist(dat_adelie$body_mass_g,
+     main = "Histogram of Adelie penguin body mass",
+     xlab = "body mass (g)", col = "darkslategray4",
+     cex.main = 0.85)
+
+
+```
+
 
 
 ## Distribution Functions
 
+R implements probability, cumulative probability, and quantile functions for many distributions, including parametric and normal distributions. 
+
+### Normal Distributions
+
+Normal distribution is a continuous distribution and normal distribution functions include the following:
+
+* dnorm( ) is the probability density function for a normal distribution
+* pnorm( ) is the cumulative density function
+* qnorm( ) is the quantile function 
+
+The continuous distribution uses the term density rather than mass (as used in discrete distributions).
+
+#### dnorm( )
+
+The dnorm( ) function gives us the density of a normal distribution. We would use dnorm( ) to calculate the probability that we observe an exact value based on the mean and standard deviation of a normal distribution. The default in all of the distribution functions for mean is 1 and sd is 0.
+
+In the below example, I will show how to calculate the dnorm( ) probability of observing a value of exactly 7 in a normal distribution with a mean of 5 and standard deviation of 2.5.
+
+```{r}
+dnorm(7, mean = 10, sd = 2.5)
+
+```
+
+
+#### pnorm( )
+
+The pnorm( ) function gives us the probability of observing a value of x or less. Within the pnorm( ) function, we can specify the mean and standard deviation of a normal distribution, and the default .
+
+As an example, we can calculate the probability of observing a values less than 7 in an normal distribution with mean of 5 and standard deviation of 2.5.
+
+```{r}
+pnorm(7, mean = 10, sd = 2.5)
+
+```
+These results indicate that we have approximately a 11.5% chance to observe a value of 7 or less. But what if we wanted to know the probability of observing the value of greater than 7? We can figure that out by subtracting probability of observing a value of 7 or less from 1. Here is an example of that:
+
+```{r}
+1 - pnorm(7, mean = 10, sd = 2.5)
+```
+So in this case we have approximately an 88.5% chance to observe a value greater than 7.  
+
+#### qnorm( )
+
+Like dnorm( ) and pnorm( ), we can calculate the quantile function of a vector of probabilities. However, with qnorm( ) we will find the boundary value or the quantile/percentile of the area. So essentially, this is the value in which a certain percentile, e.g. 75%, of a population that is normally distributed will fall below.    
+
+In the example below, I will show how to use qnorm if we want to find the 85th percentile value:
+
+```{r}
+qnorm(0.85, mean = 10, sd = 2.5)
+
+```
+In our example above, we can say that 85% of the values in a population that is normally distributed with a mean of 10 and sd of 2.5 will fall below 12.59108. 
+
+### Discrete Distributions
+
+Similar to the normal distribution, we can use various functions to calculate the probability, cumulative probability, and quantile function of a binomial distribution. Binomial distribution is a discrete distribution and binomial distribution functions include the following
+
+
+* dbinom( ) is the probability mass function for a binomial distribution
+* pbinom ) is the cumulative mass function
+* qbinom( ) is the quantile function 
+
+#### dbinom( )
+
+The dbinom( ) function gives us the mass of a binomial distribution. We would use dbinom( ) to calculate the probability that we observe an exact count of successes based on a sample parameter, a size (total samples possible), and a probability parameter. 
+
+In the below example, I will show how to calculate the dbinom( ) probability of observing birds in 10 of the 15 plots I collected data in a binomial distribution with a probability of 10/15 or 2/3 or 0.666666.
+
+```{r}
+dbinom(x = 10, size = 15, prob = 2/3, log = FALSE)
+```
+So, these results indicate that I would observe birds in 10 of the 15 plots approximately 21 % of the time. 
+
+#### pbinom( )
+
+Similar to pnorm( ), we can use pbinom( ) to calculate the probability that we observe a value of x or less.
+
+For the example, we can use the same parameters and calculate the the probability of observing birds in 10 or fewer of the 15 plots with the same probability.
+
+```{r}
+pbinom(10, size = 15, prob = 2/3)
+```
+These results indicate that we have approximately a 59.6% chance to observe birds in 10 or fewer of our survey plots. But what if we wanted to know the probability of observing birds in 10 or more of our survey plts? We can figure that out by subtracting probability of observing birds in 10 or fewer of the survey plots from 1. Here is an example of that:
+
+```{r}
+1 - pbinom(10, size = 15, prob = 2/3)
+```
+So in this case we have approximately a 40% chance to observe birds in 10 or more of our survey plots.
+
+
+#### qbinom( )
+
+Given a probability or a set of probabilities, we can use the qbinom( ) function to obtain the binomial quantile that corresponds to that probability. The syntax of qbinom( ) like qnorm( ) includes the probability of our observation (p), but also the probability of success (e.g., prob) as has been used with the other binomial distribution functions. 
+
+For this last example, I will calculate the quantile of the 60% percentile for the 15 bird survey plots with a probability of 2/3 as we have used in the other examples. 
+```{r}
+qbinom(p = 0.60, size = 15, prob = 2/3)
+
+```
+These results indicate that 60% of the trials that are successful 66% of the time will fall below 11. Or at least that is as far as I understand how this works. 

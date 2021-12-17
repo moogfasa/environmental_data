@@ -1,7 +1,7 @@
 ---
 title: 'Lab 11: Simulation and Power Analysis'
 author: "Mandy Klehr -- I worked with Matt, John, Heather, Jahiya, and Bonnie"
-date: "12/5/2021"
+date: "12/16/2021"
 output:  
   html_document:
     theme: spacelab
@@ -438,11 +438,11 @@ load(file = here("data", "lab_ll_dat_dispersion_sim.RData"))
 ```
 
 
-## Q1
+# Q1
 
 *Include a figure of your line plot in your report.*
 
-```{r}
+```{r, echo = FALSE}
 # Line plot of standard deviation (x-axis) and statistical power (y-axis)
 plot(sim_output_dispersion,
   type = 'l', xlab = 'Standard deviation', ylab = 'Power')
@@ -458,12 +458,13 @@ abline(v = sd_obs, lty = 2, col = 'red')
 
 *Why do you think that statistical power decreases as population dispersion increases?*
 
+The statistical power decreases as population dispersion increases because dispersion decreases the probability of rejecting the null hypothesis (a **Type I error** when a relationship may actually exist) which may be indicative of a small sample size. 
 
 
 *Create a contour plot of the sample size and population dispersion power simulation.*
 
 
-```{r}
+```{r, echo = FALSE, results = FALSE, fig.show = 'hide'}
 alpha = 0.05
 
 # Start with a small number
@@ -475,7 +476,7 @@ sd_obs
 
 # specify the number of different standard deviation values to simulate:
 # Start with a small number
-n_sds = 20
+n_sds = 100
 pop_sds = seq(from = 0.05, to = 2.0, length.out = n_sds)
 
 pop_sd_power = numeric(n_sds)
@@ -527,7 +528,7 @@ save(
 
 *Include a figure of your contour plot in your report.*
 
-```{r}
+```{r, echo = FALSE, warning = FALSE}
 contour(
   x = sim_3_dat$pop_sd, y = sim_3_dat$sample_size, z = sim_3_dat$power,
   xlab = "standard deviation",
@@ -543,7 +544,7 @@ contour(
 
 *Qualitatively describe the patterns you see in the contour plot. Make sure you discuss the effects of sample size and population dispersion on statistical power.*
 
-
 # Q5
+
 
 
