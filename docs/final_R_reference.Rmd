@@ -264,8 +264,6 @@ dat_adelie
 
 ## Numerical Data Exploration
 
-You may use the ginkgo or Palmer penguin data to create examples of:
-
 ### summary( )
 
 The function summary( ) can be used to produce various summary results, such as the mean and median, of numeric objects (vectors), including those in a data frame, or model fitting functions. 
